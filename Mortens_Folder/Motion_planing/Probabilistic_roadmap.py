@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import Point, Polygon, LineString
 from shapely.plotting import plot_polygon, plot_line
+from shapely.validation import make_valid
 
 def hammersley_sequence(n, k):
     """Generate Hammersley sequence samples"""
@@ -78,11 +79,14 @@ def plot_environment(environment, nodes=None, edges=None):
 # Define the environment (free space as a polygon)
 # Here we create a simple rectangular environment with some holes
 outer_boundary = [(0, 0), (10, 0), (10, 10), (0, 10)]
-obstacle1 = [(2, 2), (4, 2), (4, 4), (2, 4)]
-obstacle2 = [(6, 6), (8, 6), (8, 8), (6, 8)]
-obstacle3 = [(3, 7), (7, 7), (7, 9), (3, 9)]
+obstacle1 = [(2, 2), (2, 4), (4, 4), (4, 2)]  # Note: clockwise for holes
+obstacle2 = [(6, 6), (6, 8), (8, 8), (8, 6)]  # Note: clockwise for holes
+obstacle3 = [(3, 7), (3, 9), (7, 9), (7, 7)]  # Note: clockwise for holes
 
+# Create the polygon and ensure it's valid
 environment = Polygon(outer_boundary, [obstacle1, obstacle2, obstacle3])
+if not environment.is_valid:
+    environment = make_valid(environment)
 
 # Define bounds for sampling [min_x, min_y, max_x, max_y]
 bounds = [0, 0, 10, 10]
