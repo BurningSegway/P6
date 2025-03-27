@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from shapely.geometry import Point, Polygon, LineString
 from shapely.plotting import plot_polygon, plot_line
 from shapely.validation import make_valid
+num_samples=100
+k_neighbors=3
 
 def hammersley_sequence(n, k):
     """Generate Hammersley sequence samples"""
@@ -18,7 +20,7 @@ def hammersley_sequence(n, k):
         samples.append([(i + 0.5) / n, p])
     return np.array(samples)
 
-def generate_prm(environment, bounds, num_samples=100, k_neighbors=5):
+def generate_prm(environment, bounds, num_samples, k_neighbors):
     """Generate a Probabilistic Roadmap"""
     # Generate samples using Hammersley sequence
     samples = hammersley_sequence(num_samples, 2)
@@ -92,7 +94,7 @@ if not environment.is_valid:
 bounds = [0, 0, 10, 10]
 
 # Generate PRM
-nodes, edges = generate_prm(environment, bounds, num_samples=200, k_neighbors=5)
+nodes, edges = generate_prm(environment, bounds, num_samples, k_neighbors)
 
 # Plot the environment and PRM
 plot_environment(environment, nodes, edges)

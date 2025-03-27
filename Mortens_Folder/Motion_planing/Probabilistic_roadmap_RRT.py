@@ -5,6 +5,10 @@ from shapely.plotting import plot_polygon, plot_line
 from shapely.validation import make_valid
 import random
 
+max_nodes=200
+step_size=0.5
+goal_threshold=0.5
+
 class Node:
     """Node class for RRT"""
     def __init__(self, x, y, parent=None):
@@ -13,9 +17,9 @@ class Node:
         self.parent = parent
         self.children = []
 
-max_nodes=10
 
-def build_rrt(environment, bounds, q_s, q_g, max_nodes, step_size=0.5, goal_threshold=0.5):
+
+def build_rrt(environment, bounds, q_s, q_g, max_nodes, step_size, goal_threshold):
     """Build an RRT from start to goal"""
     # Initialize tree with start node
     start_node = Node(q_s[0], q_s[1])
@@ -121,7 +125,7 @@ q_s = (1, 1)  # Start point
 q_g = (9, 9)  # Goal point
 
 # Build RRT
-nodes, path = build_rrt(environment, bounds, q_s, q_g, max_nodes, step_size=0.5)
+nodes, path = build_rrt(environment, bounds, q_s, q_g, max_nodes, step_size, goal_threshold)
 
 # Plot the RRT and path
 plot_rrt(environment, nodes, path, q_s, q_g)
