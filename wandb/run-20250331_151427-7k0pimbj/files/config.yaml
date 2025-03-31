@@ -1,0 +1,73 @@
+_wandb:
+    value:
+        cli_version: 0.19.8
+        m: []
+        python_version: 3.11.9
+        t:
+            "1":
+                - 1
+                - 55
+            "2":
+                - 1
+                - 55
+            "3":
+                - 13
+                - 16
+                - 23
+                - 35
+                - 55
+            "4": 3.11.9
+            "5": 0.19.8
+            "8":
+                - 3
+                - 5
+            "12": 0.19.8
+            "13": windows-amd64
+close_environment_at_exit:
+    value: true
+disable_progressbar:
+    value: false
+discount_factor:
+    value: 0.99
+environment_info:
+    value: episode
+experiment:
+    value:
+        checkpoint_interval: 5000
+        directory: Mortens_Folder/Mortens_SKRL/CartPole/runs
+        experiment_name: ""
+        store_separately: false
+        wandb: true
+        wandb_kwargs:
+            entity: urkanin-aalborg-universitet
+            project: P6
+        write_interval: 1000
+headless:
+    value: true
+learning_rate:
+    value: 0.01
+learning_rate_scheduler:
+    value: null
+learning_starts:
+    value: 100
+mixed_precision:
+    value: false
+percentile:
+    value: 0.7
+policy:
+    value:
+        linear_layer_1: Linear(in_features=4, out_features=64, bias=True)
+        linear_layer_2: Linear(in_features=64, out_features=64, bias=True)
+        output_layer: Linear(in_features=64, out_features=2, bias=True)
+random_timesteps:
+    value: 0
+rewards_shaper:
+    value: null
+rollouts:
+    value: 1000
+state_preprocessor:
+    value: null
+stochastic_evaluation:
+    value: false
+timesteps:
+    value: 100000

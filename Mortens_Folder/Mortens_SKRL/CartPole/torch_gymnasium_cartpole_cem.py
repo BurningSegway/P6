@@ -69,6 +69,12 @@ cfg["learning_starts"] = 100
 cfg["experiment"]["write_interval"] = 1000
 cfg["experiment"]["checkpoint_interval"] = 5000
 cfg["experiment"]["directory"] = "Mortens_Folder/Mortens_SKRL/CartPole/runs"
+cfg["experiment"]["wandb"] = True
+#herunder er den komando der gemmer vores skidt på W&B, og det kan Pierre godt lide...
+cfg["experiment"]["wandb_kwargs"] ={
+    "entity": "urkanin-aalborg-universitet",
+    "project": "P6"
+}
 
 agent = CEM(models=models,
             memory=memory,
