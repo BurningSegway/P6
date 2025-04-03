@@ -1,0 +1,17 @@
+{"time":"2025-03-31T15:14:27.9140765+02:00","level":"INFO","msg":"stream: starting","core version":"0.19.8","symlink path":"C:\\Users\\Morten\\Desktop\\P6\\wandb\\run-20250331_151427-7k0pimbj\\logs\\debug-core.log"}
+{"time":"2025-03-31T15:14:28.4654212+02:00","level":"INFO","msg":"created new stream","id":"7k0pimbj"}
+{"time":"2025-03-31T15:14:28.4654212+02:00","level":"INFO","msg":"stream: started","id":"7k0pimbj"}
+{"time":"2025-03-31T15:14:28.4654212+02:00","level":"INFO","msg":"writer: Do: started","stream_id":"7k0pimbj"}
+{"time":"2025-03-31T15:14:28.4654212+02:00","level":"INFO","msg":"sender: started","stream_id":"7k0pimbj"}
+{"time":"2025-03-31T15:14:28.4654212+02:00","level":"INFO","msg":"handler: started","stream_id":"7k0pimbj"}
+{"time":"2025-03-31T15:14:28.7566567+02:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-03-31T15:14:39.1777454+02:00","level":"INFO","msg":"tensorboard: no root directory after 10 seconds, using working directory"}
+{"time":"2025-03-31T15:14:39.1907462+02:00","level":"ERROR","msg":"tensorboard: error creating symlink","target":"C:\\Users\\Morten\\Desktop\\P6\\Mortens_Folder\\Mortens_SKRL\\CartPole\\runs\\25-03-31_15-14-14-027765_CEM\\events.out.tfevents.1743426869.MortenSLaptop.12220.0","symlink":"C:\\Users\\Morten\\Desktop\\P6\\wandb\\run-20250331_151427-7k0pimbj\\files\\Mortens_Folder\\Mortens_SKRL\\CartPole\\runs\\25-03-31_15-14-14-027765_CEM\\events.out.tfevents.1743426869.MortenSLaptop.12220.0","error":"symlink C:\\Users\\Morten\\Desktop\\P6\\Mortens_Folder\\Mortens_SKRL\\CartPole\\runs\\25-03-31_15-14-14-027765_CEM\\events.out.tfevents.1743426869.MortenSLaptop.12220.0 C:\\Users\\Morten\\Desktop\\P6\\wandb\\run-20250331_151427-7k0pimbj\\files\\Mortens_Folder\\Mortens_SKRL\\CartPole\\runs\\25-03-31_15-14-14-027765_CEM\\events.out.tfevents.1743426869.MortenSLaptop.12220.0: A required privilege is not held by the client."}
+{"time":"2025-03-31T15:15:51.2007407+02:00","level":"INFO","msg":"stream: closing","id":"7k0pimbj"}
+{"time":"2025-03-31T15:15:51.2007407+02:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-03-31T15:15:51.2018216+02:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-03-31T15:15:52.2713976+02:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-03-31T15:15:52.5500184+02:00","level":"INFO","msg":"handler: closed","stream_id":"7k0pimbj"}
+{"time":"2025-03-31T15:15:52.5500184+02:00","level":"INFO","msg":"writer: Close: closed","stream_id":"7k0pimbj"}
+{"time":"2025-03-31T15:15:52.5500184+02:00","level":"INFO","msg":"sender: closed","stream_id":"7k0pimbj"}
+{"time":"2025-03-31T15:15:52.5507697+02:00","level":"INFO","msg":"stream: closed","id":"7k0pimbj"}
