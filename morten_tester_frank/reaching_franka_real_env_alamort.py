@@ -28,20 +28,14 @@ class ReachingFranka(gym.Env):
         if self.camera_tracking:
             threading.Thread(target=self._update_target_from_camera).start()
 
-
-
-
         # spaces
-        self.observation_space = self.actions = gym.spaces.Box(low=-1000, high=1000, shape=(8,), dtype=np.float32), self.joint_pos = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32), self.joint_vel = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32), self.object_position = gym.spaces.Box(low=-1000, high=1000, shape=(3,), dtype=np.float32), self.target_object_position = gym.spaces.Box(low=-1000, high=1000, shape=(7,), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-1000, high=1000, shape=(36,), dtype=np.float32)
 
-        if self.control_space == "blind_agent":
-            self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32)
+        if self.control_space == "blind_agent": #setting the control space as the blind agents
+            self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32) #setting the action space (7 for joint and 1 for gripper)
 
         else:
             raise ValueError("Invalid control space:", self.control_space)
-
-
-
 
         # init real franka
         print("Connecting to robot at {}...".format(robot_ip))
@@ -119,17 +113,17 @@ class ReachingFranka(gym.Env):
             robot_state = self.robot.get_state(read_once=False)
 
         # observation
-        robot_dof_pos = np.array(robot_state.q)
-        robot_dof_vel = np.array(robot_state.dq)
-        end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
+        self.actions = gym.spaces.Box(low=-1000, high=1000, shape=(8,), dtype=np.float32)
+        self.joint_pos = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32)
+        self.joint_vel = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32)
+        self.object_position = gym.spaces.Box(low=-1000, high=1000, shape=(3,), dtype=np.float32)
+        self.target_object_position = gym.spaces.Box(low=-1000, high=1000, shape=(7,), dtype=np.float32)
 
-        dof_pos_scaled = 2.0 * (robot_dof_pos - self.robot_dof_lower_limits) / (self.robot_dof_upper_limits - self.robot_dof_lower_limits) - 1.0
-        dof_vel_scaled = robot_dof_vel * self.dof_vel_scale
-
-        self.obs_buf[0] = self.progress_buf / float(self.max_episode_length)
-        self.obs_buf[1:8] = dof_pos_scaled
-        self.obs_buf[8:15] = dof_vel_scaled
-        self.obs_buf[15:18] = self.target_pos
+        self.obs_buf[0:8] = self.actions
+        self.obs_buf[8:17] = self.joint_pos
+        self.obs_buf[17:26] = self.joint_vel
+        self.obs_buf[26:29] = self.object_position
+        self.obs_buf[29:36] = self.target_object_position #der er måske ikke en 36'th plads da den er 36 lang men har 0 med? så prøv at skriv 35 ??
 
         # reward
         distance = np.linalg.norm(end_effector_pos - self.target_pos)
