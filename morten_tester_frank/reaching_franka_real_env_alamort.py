@@ -123,7 +123,19 @@ class ReachingFranka(gym.Env):
         self.obs_buf[8:17] = self.joint_pos
         self.obs_buf[17:26] = self.joint_vel
         self.obs_buf[26:29] = self.object_position
-        self.obs_buf[29:36] = self.target_object_position #der er måske ikke en 36'th plads da den er 36 lang men har 0 med? så prøv at skriv 35 ??
+        self.obs_buf[29:36] = self.target_object_position # der er måske ikke en 36'th plads da den er 36 lang men har 0 med? så prøv at skriv 35 ??
+
+        # dette skal muligvis bruges til at finde ud af noget med rewards ift position ift målet men tror nu bare at det ordnes i agenten (tal med pierre om dette)
+        # get robot state
+        #try:
+        #    robot_state = self.robot.get_state(read_once=True)
+        #except frankx.InvalidOperationException:
+        #    robot_state = self.robot.get_state(read_once=False)
+
+        # observation
+        #robot_dof_pos = np.array(robot_state.q)
+        #robot_dof_vel = np.array(robot_state.dq)
+        #end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
 
         # reward
         distance = np.linalg.norm(end_effector_pos - self.target_pos)

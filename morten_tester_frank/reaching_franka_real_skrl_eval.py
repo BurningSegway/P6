@@ -92,8 +92,7 @@ if control_space == "joint":
     agent.load("./agent_joint.pt")
 elif control_space == "cartesian":
     agent.load("./agent_cartesian.pt")
-elif control_space == "blind_agent":
-    agent.load("./best_agent.pt")
+
 
 # Configure and instantiate the RL trainer
 cfg_trainer = {"timesteps": 1000, "headless": True}
