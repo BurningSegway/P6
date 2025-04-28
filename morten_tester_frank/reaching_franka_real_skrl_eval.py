@@ -89,9 +89,9 @@ agent = PPO(models=models_ppo,
 
 # load checkpoints
 if control_space == "joint":
-    agent.load("./agent_joint.pt")
+    agent.load("morten_tester_frank/agent_joint.pt")
 elif control_space == "cartesian":
-    agent.load("./agent_cartesian.pt")
+    agent.load("morten_tester_frank/agent_cartesian.pt")
 
 
 # Configure and instantiate the RL trainer
