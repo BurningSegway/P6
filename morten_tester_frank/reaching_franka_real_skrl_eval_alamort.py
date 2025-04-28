@@ -13,6 +13,7 @@ from skrl.resources.preprocessors.torch import RunningStandardScaler
 from skrl.resources.schedulers.torch import KLAdaptiveLR
 from skrl.trainers.torch import SequentialTrainer
 from skrl.utils import set_seed
+from frankx import Robot, Gripper
 
 
 
@@ -136,10 +137,6 @@ agent = PPO(models=models,
             action_space=env.action_space,
             device=device)
 
-
-# configure and instantiate the RL trainer
-cfg_trainer = {"timesteps": 45000, "headless": True} #67200
-trainer = SequentialTrainer(cfg=cfg_trainer, env=env, agents=agent)
 
 
 # load checkpoints

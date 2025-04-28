@@ -99,4 +99,5 @@ cfg_trainer = {"timesteps": 1000, "headless": True}
 trainer = SequentialTrainer(cfg=cfg_trainer, env=env, agents=agent)
 
 # start evaluation
+
 trainer.eval()

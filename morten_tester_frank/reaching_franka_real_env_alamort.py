@@ -3,6 +3,7 @@ import time
 import threading
 import numpy as np
 from packaging import version
+from frankx import Robot, Gripper
 
 import frankx
 
@@ -31,6 +32,7 @@ class ReachingFranka(gym.Env):
         # spaces
         self.observation_space = gym.spaces.Box(low=-1000, high=1000, shape=(36,), dtype=np.float32)
         self.last_action = np.zeros(8, dtype=np.float32)
+        self.rock_target = np.zeros(7, dtype=np.float32)
 
 
         if self.control_space == "blind_agent": #setting the control space as the blind agents
@@ -38,7 +40,7 @@ class ReachingFranka(gym.Env):
 
         else:
             raise ValueError("Invalid control space:", self.control_space)
-
+        
         # init real franka
         print("Connecting to robot at {}...".format(robot_ip))
         self.robot = frankx.Robot(robot_ip)
@@ -54,6 +56,10 @@ class ReachingFranka(gym.Env):
         self.gripper = self.robot.get_gripper()
         print("Robot connected")
 
+        state = self.robot.read_once()
+        #print('\nPose: ', self.robot.current_pose())
+        #print('O_TT_E: ', state.O_T_EE)
+
         self.motion = None
         self.motion_thread = None
 
@@ -68,7 +74,7 @@ class ReachingFranka(gym.Env):
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
 
         self.progress_buf = 1
-        self.obs_buf = np.zeros((18,), dtype=np.float32)
+        self.obs_buf = np.zeros((36,), dtype=np.float32)
 
     def _update_target_from_camera(self):
         pixel_to_meter = 1.11 / 375  # m/px: adjust for custom cases
@@ -123,30 +129,35 @@ class ReachingFranka(gym.Env):
 
 
         robot_dof_pos = np.array(robot_state.q)
+
         robot_dof_vel = np.array(robot_state.dq)
+
         end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
 
-        print(end_effector_pos)
+        #print(end_effector_pos)
 
         self.actions = self.last_action
-        self.joint_pos = np.array(robot_state.q) #+ np.array(robot_state.O_T_EE[-4:-1]) #tilføj gripper som de sidste 2 entries så det give 9?
-        self.joint_vel = np.array(robot_state.dq)
+        self.joint_pos = np.zeros((9,))
+        self.joint_pos[0:7] = np.array(robot_state.q)
+        self.joint_pos[7:9] = np.array(robot_state.O_T_EE[-3:-1]) #np.array(robot_state.O_T_EE[-4:-1]) #tilføj gripper som de sidste 2 entries så det give 9?
+        self.joint_vel = np.zeros((9,))
+        self.joint_vel[0:7] = np.array(robot_state.dq)
+        self.joint_vel[7:9] = [0, 0]  # Assuming no velocity for gripper
+        print('self.joint_vel: ', self.joint_vel)
         self.object_position = self.target_pos
-        self.target_object_position = 0.3, 0.0, 0.6
+        self.target_object_position = np.zeros(7,)
+        self.target_object_position[0:7] = self.rock_target
+ 
 
-
-        self.obs_buf[0:8] = self.actions
-        self.obs_buf[8:17] = self.joint_pos
+        self.obs_buf[0:8] =   self.actions
+        self.obs_buf[8:17] =  self.joint_pos
         self.obs_buf[17:26] = self.joint_vel
         self.obs_buf[26:29] = self.object_position
         self.obs_buf[29:36] = self.target_object_position # der er måske ikke en 36'th plads da den er 36 lang men har 0 med? så prøv at skriv 35 ??
 
         # dette skal muligvis bruges til at finde ud af noget med rewards ift position ift målet men tror nu bare at det ordnes i agenten (tal med pierre om dette)
         # get robot state
-        try:
-            robot_state = self.robot.get_state(read_once=True)
-        except frankx.InvalidOperationException:
-            robot_state = self.robot.get_state(read_once=False)
+
 
         # reward
         distance = np.linalg.norm(end_effector_pos - self.target_pos)
@@ -179,7 +190,7 @@ class ReachingFranka(gym.Env):
 
         # go to 1) safe position, 2) random position
         self.robot.move(frankx.JointMotion(self.robot_default_dof_pos.tolist()))
-        dof_pos = self.robot_default_dof_pos + 0.25 * (np.random.rand(7) - 0.5)
+        dof_pos = self.robot_default_dof_pos + 0.25 * (np.random.rand(7) - 0.5) #start position offset
         self.robot.move(frankx.JointMotion(dof_pos.tolist()))
 
         # get target position from prompt
@@ -227,6 +238,8 @@ class ReachingFranka(gym.Env):
 
     def step(self, action):
         self.last_action = action
+        print("action is: ", action)
+        self.rock_target = self.robot_default_dof_pos[0:8]
         self.progress_buf += 1
 
         # control space
@@ -238,7 +251,8 @@ class ReachingFranka(gym.Env):
             except frankx.InvalidOperationException:
                 robot_state = self.robot.get_state(read_once=False)
             # forward kinematics
-            dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action * self.action_scale)
+            dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[:7] * self.action_scale) # fikser at der ikke er gripper med i øjeblikket... måske
+            #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action * self.action_scale)
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
             affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
         # cartesian
