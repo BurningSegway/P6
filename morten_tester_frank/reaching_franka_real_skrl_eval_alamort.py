@@ -32,7 +32,7 @@ class Policy(GaussianMixin, Model):
 # Load the environment
 from reaching_franka_real_env_alamort import ReachingFranka
 
-control_space = "blind agent"   # blind_agent
+control_space = "blind_agent"   # blind_agent
 motion_type = "waypoint"  # waypoint or impedance
 camera_tracking = False   # True for USB-camera tracking
 
@@ -80,7 +80,7 @@ agent = PPO(models=models_ppo,
 # load checkpoints
 
 if control_space == "blind_agent":
-    agent.load("./best_agent.pt")
+    agent.load("morten_tester_frank/best_agent.pt")
 else:
     print("error u no got the blind agent")
 
