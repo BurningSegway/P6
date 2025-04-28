@@ -163,6 +163,35 @@ class ReachingFranka(gym.Env):
         distance = np.linalg.norm(end_effector_pos - self.target_pos)
         reward = -distance
 
+        ###
+        #class RewardsCfg:
+        #    """Reward terms for the MDP."""
+
+        #    reaching_object = RewTerm(func=mdp.object_ee_distance, params={"std": 0.1}, weight=1.0)
+
+        #    lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 0.04}, weight=15.0)
+
+        #    object_goal_tracking = RewTerm(
+        #        func=mdp.object_goal_distance,
+        #        params={"std": 0.3, "minimal_height": 0.04, "command_name": "object_pose"},
+        #        weight=16.0,
+        #    )
+
+        #    """object_goal_tracking_fine_grained = RewTerm(
+        #        func=mdp.object_goal_distance,
+        #        params={"std": 0.05, "minimal_height": 0.04, "command_name": "object_pose"},
+        #        weight=5.0,
+        #    )"""
+
+        #    # action penalty
+        #    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1e-3)
+
+        #    joint_vel = RewTerm(
+        #        func=mdp.joint_vel_l2,
+        #        weight=-1e-3,
+        #        params={"asset_cfg": SceneEntityCfg("robot")},
+        #    )
+        ###
         # done
         done = self.progress_buf >= self.max_episode_length - 1
         done = done or distance <= 0.075
@@ -271,7 +300,7 @@ class ReachingFranka(gym.Env):
         # motion type
         # waypoint motion
         if self.motion_type == "waypoint":
-            if self.control_space == "blind agent":
+            if self.control_space == "blind_agent":
                 self.motion.set_next_waypoint(frankx.Waypoint(affine))
             elif self.control_space == "cartesian":
                 self.motion.set_next_waypoint(frankx.Waypoint(affine, frankx.Waypoint.Relative))
