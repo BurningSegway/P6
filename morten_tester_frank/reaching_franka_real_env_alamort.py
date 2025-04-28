@@ -30,6 +30,8 @@ class ReachingFranka(gym.Env):
 
         # spaces
         self.observation_space = gym.spaces.Box(low=-1000, high=1000, shape=(36,), dtype=np.float32)
+        self.last_action = np.zeros(8, dtype=np.float32)
+
 
         if self.control_space == "blind_agent": #setting the control space as the blind agents
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32) #setting the action space (7 for joint and 1 for gripper)
@@ -126,10 +128,10 @@ class ReachingFranka(gym.Env):
 
         print(end_effector_pos)
 
-        #self.actions = 
-        self.joint_pos = np.array(robot_state.q) #tilføj gripper som de sidste 2 entries så det give 9?
+        self.actions = self.last_action
+        self.joint_pos = np.array(robot_state.q) #+ np.array(robot_state.O_T_EE[-4:-1]) #tilføj gripper som de sidste 2 entries så det give 9?
         self.joint_vel = np.array(robot_state.dq)
-        self.object_position = 0.4, 0.0, 0.4
+        self.object_position = self.target_pos
         self.target_object_position = 0.3, 0.0, 0.6
 
 
@@ -224,11 +226,12 @@ class ReachingFranka(gym.Env):
             return observation, {}
 
     def step(self, action):
+        self.last_action = action
         self.progress_buf += 1
 
         # control space
         # joint
-        if self.control_space == "blind agent":
+        if self.control_space == "blind_agent":
             # get robot state
             try:
                 robot_state = self.robot.get_state(read_once=True)

@@ -40,6 +40,7 @@ class Shared(GaussianMixin, DeterministicMixin, Model):
 
         self.value_layer = nn.Linear(64, 1)
 
+
     def act(self, inputs, role):
         #print("Inputs")
         #print(inputs)
@@ -52,7 +53,8 @@ class Shared(GaussianMixin, DeterministicMixin, Model):
         if role == "policy":
             self._shared_output = self.net(inputs["states"])
             return self.mean_layer(self._shared_output), self.log_std_parameter, {}
-        elif role == "value":
+        elif role == "value":# instantiate a memory as rollout buffer (any memory can be used for this)
+            memory = RandomMemory(memory_size=96, num_envs=env.num_envs, device=device)
             shared_output = self.net(inputs["states"]) if self._shared_output is None else self._shared_output
             self._shared_output = None
             return self.value_layer(shared_output), {}
