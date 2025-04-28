@@ -113,11 +113,25 @@ class ReachingFranka(gym.Env):
             robot_state = self.robot.get_state(read_once=False)
 
         # observation
-        self.actions = gym.spaces.Box(low=-1000, high=1000, shape=(8,), dtype=np.float32)
-        self.joint_pos = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32)
-        self.joint_vel = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32)
-        self.object_position = gym.spaces.Box(low=-1000, high=1000, shape=(3,), dtype=np.float32)
-        self.target_object_position = gym.spaces.Box(low=-1000, high=1000, shape=(7,), dtype=np.float32)
+        #self.actions = gym.spaces.Box(low=-1000, high=1000, shape=(8,), dtype=np.float32)
+        #self.joint_pos = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32)
+        #self.joint_vel = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32)
+        #self.object_position = gym.spaces.Box(low=-1000, high=1000, shape=(3,), dtype=np.float32)
+        #self.target_object_position = gym.spaces.Box(low=-1000, high=1000, shape=(7,), dtype=np.float32)
+
+
+        robot_dof_pos = np.array(robot_state.q)
+        robot_dof_vel = np.array(robot_state.dq)
+        end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
+
+        print(end_effector_pos)
+
+        #self.actions = 
+        self.joint_pos = np.array(robot_state.q) #tilføj gripper som de sidste 2 entries så det give 9?
+        self.joint_vel = np.array(robot_state.dq)
+        self.object_position = 0.4, 0.0, 0.4
+        self.target_object_position = 0.3, 0.0, 0.6
+
 
         self.obs_buf[0:8] = self.actions
         self.obs_buf[8:17] = self.joint_pos
@@ -131,11 +145,6 @@ class ReachingFranka(gym.Env):
             robot_state = self.robot.get_state(read_once=True)
         except frankx.InvalidOperationException:
             robot_state = self.robot.get_state(read_once=False)
-
-        # observation
-        robot_dof_pos = np.array(robot_state.q)
-        robot_dof_vel = np.array(robot_state.dq)
-        end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
 
         # reward
         distance = np.linalg.norm(end_effector_pos - self.target_pos)

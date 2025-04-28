@@ -82,7 +82,7 @@ agent = PPO(models=models_ppo,
 if control_space == "blind_agent":
     agent.load("morten_tester_frank/best_agent.pt")
 else:
-    print("error u no got the blind agent")
+    print("wrong controll space")
 
 # Configure and instantiate the RL trainer
 cfg_trainer = {"timesteps": 1000, "headless": True}
