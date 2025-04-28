@@ -8,7 +8,7 @@ import frankx
 
 
 class ReachingFranka(gym.Env):
-    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="joint", motion_type="waypoint", camera_tracking=False):
+    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="blind_agent", motion_type="waypoint", camera_tracking=False):
         # gym API
         self._drepecated_api = version.parse(gym.__version__) < version.parse(" 0.25.0")
 
@@ -127,15 +127,15 @@ class ReachingFranka(gym.Env):
 
         # dette skal muligvis bruges til at finde ud af noget med rewards ift position ift målet men tror nu bare at det ordnes i agenten (tal med pierre om dette)
         # get robot state
-        #try:
-        #    robot_state = self.robot.get_state(read_once=True)
-        #except frankx.InvalidOperationException:
-        #    robot_state = self.robot.get_state(read_once=False)
+        try:
+            robot_state = self.robot.get_state(read_once=True)
+        except frankx.InvalidOperationException:
+            robot_state = self.robot.get_state(read_once=False)
 
         # observation
-        #robot_dof_pos = np.array(robot_state.q)
-        #robot_dof_vel = np.array(robot_state.dq)
-        #end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
+        robot_dof_pos = np.array(robot_state.q)
+        robot_dof_vel = np.array(robot_state.dq)
+        end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
 
         # reward
         distance = np.linalg.norm(end_effector_pos - self.target_pos)
@@ -219,7 +219,7 @@ class ReachingFranka(gym.Env):
 
         # control space
         # joint
-        if self.control_space == "joint":
+        if self.control_space == "blind agent":
             # get robot state
             try:
                 robot_state = self.robot.get_state(read_once=True)
@@ -245,7 +245,7 @@ class ReachingFranka(gym.Env):
         # motion type
         # waypoint motion
         if self.motion_type == "waypoint":
-            if self.control_space == "joint":
+            if self.control_space == "blind agent":
                 self.motion.set_next_waypoint(frankx.Waypoint(affine))
             elif self.control_space == "cartesian":
                 self.motion.set_next_waypoint(frankx.Waypoint(affine, frankx.Waypoint.Relative))
