@@ -71,9 +71,11 @@ class ReachingFranka(gym.Env):
         self.max_episode_length = 100
         self.robot_dof_speed_scales = 1
         self.target_pos = np.array([0.65, 0.2, 0.2])
-        self.robot_default_dof_pos = np.radians([0, -45, 0, -135, 0, 90, 45])
+        self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
+        self.robot_default_gripper_pos = np.array([0.04])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
+
 
         self.progress_buf = 1
         self.obs_buf = np.zeros((36,), dtype=np.float32)
@@ -200,9 +202,10 @@ class ReachingFranka(gym.Env):
 
         # go to 1) safe position, 2) random position
         self.robot.move(frankx.JointMotion(self.robot_default_dof_pos.tolist()))
-        dof_pos = self.robot_default_dof_pos + 0.25 * (np.random.rand(7) - 0.5) #start position offset
+        dof_pos = self.robot_default_dof_pos # + 0.25 * (np.random.rand(7) - 0.5) #start position offset
+        print(self.robot_default_dof_pos)
         self.robot.move(frankx.JointMotion(dof_pos.tolist()))
-
+        #self.gripper.move(0.04)
         # get target position from prompt
         if not self.camera_tracking:
             while True:
@@ -214,7 +217,7 @@ class ReachingFranka(gym.Env):
                     else:
                         noise = (2 * np.random.rand(3) - 1) * np.array([0.25, 0.25, 0.10])
                         self.target_pos = np.array([0.5, 0.0, 0.2]) + noise
-                        self.target_pos[2]= max(self.target_pos[2], 0.5)
+                        self.target_pos[2]= max(self.target_pos[2], 0.1)
                     print("Target position:", self.target_pos)
                     break
                 except ValueError:
