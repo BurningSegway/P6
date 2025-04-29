@@ -251,9 +251,10 @@ class ReachingFranka(gym.Env):
 
     def step(self, action):
         self.last_action = action
-        print("action is: ", action)
-        self.rock_target = self.robot_default_dof_pos[0:8]
+        print("action iss: ", action)
+        self.rock_target = self.robot_default_dof_pos[0:7]
         self.progress_buf += 1
+
         # control space
         # joint
         if self.control_space == "blind_agent":
@@ -303,6 +304,10 @@ class ReachingFranka(gym.Env):
 
         observation, reward, done = self._get_observation_reward_done()
 
+
+        print("oberservations is: ")
+        for i in range(len(observation)):
+            print(observation[i])
 
         if self._drepecated_api:
             return observation, reward, done, {}
