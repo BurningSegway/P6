@@ -53,10 +53,10 @@ class ReachingFranka(gym.Env):
         self.robot.jerk_rel = 0.005
         #self.robot.set_dynamic_rel(0.2)
 
-        self.gripper = self.robot.get_gripper()
-        gripper_state = self.gripper.get_state()
-        print(gripper_state)
-        print("Robot connected")
+        #print("FIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIISSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSEEEEEEEEEEEEEEEEEEE")
+        #print(gripper_width)
+        #print(gripper_speed)
+        #print("Robot connected")
 
         state = self.robot.read_once()
         #print('\nPose: ', self.robot.current_pose())
@@ -136,15 +136,23 @@ class ReachingFranka(gym.Env):
 
         end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
 
+        self.gripper = self.robot.get_gripper()
+        gripper_width = self.gripper.width()
+        gripper_speed = self.gripper.__getattribute__("gripper_speed")
+
         #print(end_effector_pos)
 
         self.actions = self.last_action
         self.joint_pos = np.zeros((9,))
         self.joint_pos[0:7] = np.array(robot_state.q)
-        self.joint_pos[7:9] = np.array(robot_state.O_T_EE[-3:-1]) #np.array(robot_state.O_T_EE[-4:-1]) #tilføj gripper som de sidste 2 entries så det give 9?
+        self.joint_pos[7:8] = gripper_width/2
+        self.joint_pos[8:9] = gripper_width/2
+        
         self.joint_vel = np.zeros((9,))
         self.joint_vel[0:7] = np.array(robot_state.dq)
-        self.joint_vel[7:9] = [0, 0]  # Assuming no velocity for gripper
+        self.joint_vel[7:8] = gripper_speed
+        self.joint_vel[8:9] = gripper_speed
+        
         print('self.joint_vel: ', self.joint_vel)
         self.object_position = self.target_pos
         self.target_object_position = np.zeros(7,)
@@ -165,35 +173,6 @@ class ReachingFranka(gym.Env):
         distance = np.linalg.norm(end_effector_pos - self.target_pos)
         reward = -distance
 
-        ###
-        #class RewardsCfg:
-        #    """Reward terms for the MDP."""
-
-        #    reaching_object = RewTerm(func=mdp.object_ee_distance, params={"std": 0.1}, weight=1.0)
-
-        #    lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 0.04}, weight=15.0)
-
-        #    object_goal_tracking = RewTerm(
-        #        func=mdp.object_goal_distance,
-        #        params={"std": 0.3, "minimal_height": 0.04, "command_name": "object_pose"},
-        #        weight=16.0,
-        #    )
-
-        #    """object_goal_tracking_fine_grained = RewTerm(
-        #        func=mdp.object_goal_distance,
-        #        params={"std": 0.05, "minimal_height": 0.04, "command_name": "object_pose"},
-        #        weight=5.0,
-        #    )"""
-
-        #    # action penalty
-        #    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1e-3)
-
-        #    joint_vel = RewTerm(
-        #        func=mdp.joint_vel_l2,
-        #        weight=-1e-3,
-        #        params={"asset_cfg": SceneEntityCfg("robot")},
-        #    )
-        ###
         # done
         done = self.progress_buf >= self.max_episode_length - 1
         done = done or distance <= 0.075
@@ -282,10 +261,15 @@ class ReachingFranka(gym.Env):
             except frankx.InvalidOperationException:
                 robot_state = self.robot.get_state(read_once=False)
             # forward kinematics
-            dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[:7] * self.action_scale) # fikser at der ikke er gripper med i øjeblikket... måske
+            dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale) # fikser at der ikke er gripper med i øjeblikket... måske
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action * self.action_scale)
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
             affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
+            
+        ##
+        #self.gripper.clamp()
+        #Noget med gripper
+        ##
         # cartesian
         elif self.control_space == "cartesian":
             action /= 100.0
