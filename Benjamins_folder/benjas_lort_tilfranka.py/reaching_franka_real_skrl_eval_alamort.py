@@ -63,8 +63,9 @@ class Shared(GaussianMixin, DeterministicMixin, Model):
             return self.value_layer(shared_output), {}
 
 
-# Load the environment
-from reaching_franka_real_env_alamort import ReachingFranka
+# Load the environment benja's eller mortens
+#from reaching_franka_real_env_alamort import ReachingFranka
+from reaching_franka_real_env_alabenja import ReachingFranka
 
 control_space = "blind_agent"   # blind_agent
 motion_type = "waypoint"  # waypoint or impedance
@@ -145,7 +146,6 @@ if control_space == "blind_agent":
     agent.load("morten_tester_frank/best_agent.pt")
 else:
     print("wrong controll space")
-
 # Configure and instantiate the RL trainer
 cfg_trainer = {"timesteps": 1000, "headless": True}
 trainer = SequentialTrainer(cfg=cfg_trainer, env=env, agents=agent)
