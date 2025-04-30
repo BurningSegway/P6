@@ -11,7 +11,7 @@ from skrl.memories.torch import RandomMemory
 from skrl.models.torch import DeterministicMixin, GaussianMixin, Model
 from skrl.resources.preprocessors.torch import RunningStandardScaler
 from skrl.resources.schedulers.torch import KLAdaptiveLR
-from skrl.trainers.torch import SequentialTrainer
+from skrl.trainers.torch import SequentialTrainer, StepTrainer
 from skrl.utils import set_seed
 from frankx import Robot, Gripper
 
@@ -147,8 +147,15 @@ if control_space == "blind_agent":
 else:
     print("wrong controll space")
 # Configure and instantiate the RL trainer
-cfg_trainer = {"timesteps": 1000, "headless": True}
-trainer = SequentialTrainer(cfg=cfg_trainer, env=env, agents=agent)
+#cfg_trainer = {"timesteps": 1000, "headless": True}
+#trainer = SequentialTrainer(cfg=cfg_trainer, env=env, agents=agent)
 
 # start evaluation
-trainer.eval()
+#trainer.eval()
+
+
+step_trainer = StepTrainer(env=env, agents=agent,
+                           cfg={"timesteps": 10, "stochastic_evaluation": True})
+obs_batch, reward_batch, term_batch, trunc_batch, info = step_trainer.eval(timesteps=10)
+print("Batched observations:", obs_batch)
+print("Batched actions:", agent.last_actions)
