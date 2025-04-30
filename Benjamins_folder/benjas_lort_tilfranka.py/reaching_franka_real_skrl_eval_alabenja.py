@@ -64,11 +64,11 @@ class Shared(GaussianMixin, DeterministicMixin, Model):
 
 
 # Load the environment benja's eller mortens
-from reaching_franka_real_env_alamort import ReachingFranka
-#from reaching_franka_real_env_alabenja import ReachingFranka
+#from reaching_franka_real_env_alamort import ReachingFranka
+from reaching_franka_real_env_alabenja import ReachingFranka
 
 control_space = "blind_agent"   # blind_agent
-motion_type = "impedance"  # waypoint or impedance
+motion_type = "waypoint"  # waypoint or impedance
 camera_tracking = False   # True for USB-camera tracking
 
 env = ReachingFranka(robot_ip="192.168.2.30",
@@ -143,7 +143,7 @@ agent = PPO(models=models,
 # load checkpoints
 
 if control_space == "blind_agent":
-    agent.load("morten_tester_frank/best_agent.pt")
+    agent.load("Benjamins_folder/benjas_lort_tilfranka.py/best_agent.pt")
 else:
     print("wrong controll space")
 # Configure and instantiate the RL trainer

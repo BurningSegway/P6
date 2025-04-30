@@ -9,7 +9,7 @@ import frankx
 
 
 class ReachingFranka(gym.Env):
-    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="blind_agent", motion_type="waypoint", camera_tracking=False):
+    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="blind_agent", motion_type="impedance", camera_tracking=False):
         # gym API
         self._drepecated_api = version.parse(gym.__version__) < version.parse(" 0.25.0")
 
@@ -69,7 +69,7 @@ class ReachingFranka(gym.Env):
         self.action_scale = 2.5
         self.dof_vel_scale = 0.1
         self.max_episode_length = 100
-        self.robot_dof_speed_scales = 1
+        self.robot_dof_speed_scales = 0.5 #This controlls the speed do not put above 0.5
         self.target_pos = np.array([0.65, 0.2, 0.2])
         self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
         self.robot_default_gripper_pos = np.array([0.04])
