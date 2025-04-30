@@ -8,7 +8,7 @@ import frankx
 
 
 class ReachingFranka(gym.Env):
-    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="joint", motion_type="waypoint", camera_tracking=False):
+    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="joint", motion_type="impedance", camera_tracking=False):
         # gym API
         self._drepecated_api = version.parse(gym.__version__) < version.parse(" 0.25.0")
 

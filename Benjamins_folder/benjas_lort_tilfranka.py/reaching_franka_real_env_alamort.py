@@ -9,7 +9,7 @@ import frankx
 
 
 class ReachingFranka(gym.Env):
-    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="blind_agent", motion_type="impedance", camera_tracking=False):
+    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="blind_agent", motion_type="waypoint", camera_tracking=False):
         # gym API
         self._drepecated_api = version.parse(gym.__version__) < version.parse(" 0.25.0")
 
@@ -65,11 +65,11 @@ class ReachingFranka(gym.Env):
         self.motion = None
         self.motion_thread = None
 
-        self.dt = 1 / 120.0
+        self.dt = 1 / 100.0
         self.action_scale = 2.5
         self.dof_vel_scale = 0.1
         self.max_episode_length = 100
-        self.robot_dof_speed_scales = 0.5 #This controlls the speed do not put above 0.5
+        self.robot_dof_speed_scales = 0.3 #This controlls the speed do not put above 0.5
         self.target_pos = np.array([0.65, 0.2, 0.2])
         self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
         self.robot_default_gripper_pos = np.array([0.04])
@@ -171,13 +171,13 @@ class ReachingFranka(gym.Env):
 
 
         # reward
-        #distance = np.linalg.norm(end_effector_pos - self.target_pos)
-        #reward = -distance
-        reward = 0
+        distance = np.linalg.norm(end_effector_pos - self.target_pos)
+        reward = -distance
+        #reward = 0
 
         # done
         done = self.progress_buf >= self.max_episode_length - 1
-        #done = done or distance <= 0.075
+        done = done or distance <= 0.075
 
         #print("Distance:", distance)
         if done:
@@ -205,7 +205,7 @@ class ReachingFranka(gym.Env):
         dof_pos = self.robot_default_dof_pos # + 0.25 * (np.random.rand(7) - 0.5) #start position offset
         print(self.robot_default_dof_pos)
         self.robot.move(frankx.JointMotion(dof_pos.tolist()))
-        # self.gripper.move(0.04)
+        #self.robot.move(frankx.Gripper("172.16.0.2", -0.02, 20))
 
         # get target position from prompt
         if not self.camera_tracking:
@@ -217,7 +217,7 @@ class ReachingFranka(gym.Env):
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
                         #noise = (2 * np.random.rand(3) - 1) * np.array([0.25, 0.25, 0.10])
-                        self.target_pos = np.array([0.5, 0.0, 0.15]) # + noise
+                        self.target_pos = np.array([0.0, 0.0, 0.6]) # + noise
                         #self.target_pos[2]= max(self.target_pos[2], 0.1)
                     print("Target position:", self.target_pos)
                     break
@@ -253,7 +253,7 @@ class ReachingFranka(gym.Env):
     def step(self, action):
         self.last_action = action
         print("action is: ", action)
-        self.rock_target = self.robot_default_dof_pos[0:8]
+        self.rock_target = self.robot_default_dof_pos[0:7]
         self.progress_buf += 1
         # control space
         # joint

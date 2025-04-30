@@ -32,8 +32,8 @@ class Policy(GaussianMixin, Model):
 # Load the environment
 from reaching_franka_real_env import ReachingFranka
 
-control_space = "cartesian"   # joint or cartesian -> or blind_agent
-motion_type = "waypoint"  # waypoint or impedance
+control_space = "joint"   # joint or cartesian -> or blind_agent
+motion_type = "impedance"  # waypoint or impedance
 camera_tracking = False   # True for USB-camera tracking
 
 env = ReachingFranka(robot_ip="192.168.2.30",
@@ -89,7 +89,7 @@ agent = PPO(models=models_ppo,
 
 # load checkpoints
 if control_space == "joint":
-    agent.load("./agent_joint.pt")
+    agent.load("Benjamins_folder/benjas_lort_tilfranka.py/agent_joint.pt")
 elif control_space == "cartesian":
     agent.load("./agent_cartesian.pt")
 

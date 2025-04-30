@@ -159,7 +159,8 @@ class ReachingFranka(gym.Env):
         self.object_position = self.target_pos
         self.target_object_position = np.zeros(7,)
         self.target_object_position[0:7] = self.rock_target
- 
+
+        
 
         self.obs_buf[0:8] =   self.actions
         self.obs_buf[8:17] =  self.joint_pos
@@ -304,10 +305,14 @@ class ReachingFranka(gym.Env):
 
         observation, reward, done = self._get_observation_reward_done()
 
-
+        obs_array_type = ["actions", "joint_pos", "joint_vel", "object_position", "target_object_position"]
         print("oberservations is: ")
         for i in range(len(observation)):
-            print(observation[i])
+            if i<=7: print(obs_array_type[0], i+1, "is: ", observation[i])
+            if 7<i<=16: print(obs_array_type[1], i-7, "is: ", observation[i])
+            if 16<i<=25: print(obs_array_type[2], i-16, "is: ", observation[i])
+            if 25<i<=28: print(obs_array_type[3], i-24, "is: ", observation[i])
+            if 28<i<=35: print(obs_array_type[4], i-27, "is: ", observation[i])
 
         if self._drepecated_api:
             return observation, reward, done, {}
