@@ -33,7 +33,7 @@ class ReachingFranka(gym.Env):
         self.observation_space = gym.spaces.Box(low=-1000, high=1000, shape=(36,), dtype=np.float32)
         self.last_action = np.zeros(8, dtype=np.float32)
         self.rock_target = np.zeros(7, dtype=np.float32)
-
+        #self.rock_target = np.array((1, 1, 1, 1, 1, 1, 1), dtype=np.float32)
 
         if self.control_space == "blind_agent": #setting the control space as the blind agents
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32) #setting the action space (7 for joint and 1 for gripper)
@@ -217,18 +217,19 @@ class ReachingFranka(gym.Env):
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
                         noise = (2 * np.random.rand(3) - 1) * np.array([0.25, 0.25, 0.10])
-                        self.target_pos = np.array([0.5, 0.5, 0.5])
-                        #self.target_pos = np.array([0, 0.5, 0.5])
-                        #self.target_pos = np.array([0.5, 0, 0.5])
-                        #self.target_pos = np.array([0.5, 0.5, 0.2])
-                        #self.target_pos = np.array([0.1, 0.1, 0.5])
-                        #self.target_pos = np.array([0.2, 0.2, 0.5])
+                        #self.target_pos = np.array([0.5, 0.5, 0.5]) #lige over den
+                        #self.target_pos = np.array([0, 0.5, 0.5]) # lig over den
+                        #self.target_pos = np.array([0.5, 0, 0.5]) #lige over den
+                        #self.target_pos = np.array([0.5, 0.5, 0.2]) # lige over den
+                        #self.target_pos = np.array([0.1, 0.1, 0.5]) # lige over den
+                        #self.target_pos = np.array([0.2, 0.2, 0.5]) # lige over den
                         #self.target_pos = np.array([0.3, 0.3, 0.5])
                         #self.target_pos = np.array([0.4, 0.4, 0.5])
                         #self.target_pos = np.array([-0.4, 0.4, 0.3])
                         #self.target_pos = np.array([-0.4, 0.4, 0.3])
                         #self.target_pos = np.array([0.4, -0.4, 0.3])
-                        #self.target_pos = np.array([0.4, -0.4, 0.3])
+                        #self.target_pos = np.array([0.4, -0.4, 0.3]) #lige over den
+                        self.target_pos = np.array([0.1, -0.1, 0.02])
                         #self.target_pos[2]= max(self.target_pos[2], 0.1)
                     print("Target position:", self.target_pos)
                     break
@@ -264,7 +265,8 @@ class ReachingFranka(gym.Env):
     def step(self, action):
         self.last_action = action
         print("action iss: ", action)
-        self.rock_target = self.robot_default_dof_pos[0:7]
+        #self.rock_target = self.robot_default_dof_pos[0:7]
+        self.rock_target = np.array((1, 1, 1, 1, 1, 1, 1), dtype=np.float32)
         self.progress_buf += 1
 
         # control space
