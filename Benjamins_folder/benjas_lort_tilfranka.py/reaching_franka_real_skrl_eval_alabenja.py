@@ -147,7 +147,7 @@ if control_space == "blind_agent":
 else:
     print("wrong controll space")
 # Configure and instantiate the RL trainer
-cfg_trainer = {"timesteps": 1000, "headless": True}
+cfg_trainer = {"timesteps": 1000, "headless": True, "stochastic_evaluation": True}
 trainer = SequentialTrainer(cfg=cfg_trainer, env=env, agents=agent)
 
 # start evaluation
