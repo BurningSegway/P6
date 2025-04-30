@@ -144,29 +144,11 @@ agent = PPO(models=models,
 
 if control_space == "blind_agent":
     agent.load("Benjamins_folder/benjas_lort_tilfranka.py/best_agent.pt")
-    print(">>> Loaded policy mean weights:", agent.models.mean_layer.weight.data)
-    print(">>> Loaded log_std_parameter:", agent.models.log_std_parameter.data)
 else:
     print("wrong controll space")
-
-# quick synthetic-obs test to verify policy is not constant in isolation
-obs = torch.zeros(env.observation_space.shape, device=device)
-print(">>> Synthetic-obs policy test:")
-for i in range(5):
-    obs = obs + 0.1
-    action, *_ = agent.models.act({"states": obs.unsqueeze(0)}, role="policy")
-    print(f" step {i}, action = {action.cpu().numpy()}")
-
-
 # Configure and instantiate the RL trainer
-cfg_trainer = {"timesteps": 1000, "headless": True,}
+cfg_trainer = {"timesteps": 1000, "headless": True}
 trainer = SequentialTrainer(cfg=cfg_trainer, env=env, agents=agent)
 
 # start evaluation
-import traceback
-
-try:
-    trainer.eval()
-except Exception:
-    traceback.print_exc()
-    raise
+trainer.eval()
