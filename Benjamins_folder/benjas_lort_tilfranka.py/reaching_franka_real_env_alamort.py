@@ -155,7 +155,6 @@ class ReachingFranka(gym.Env):
         self.joint_vel[7:8] = gripper_speed
         self.joint_vel[8:9] = gripper_speed
         
-        print('self.joint_vel: ', self.joint_vel)
         self.object_position = self.target_pos
         self.target_object_position = np.zeros(7,)
         self.target_object_position[0:7] = self.rock_target
@@ -172,14 +171,15 @@ class ReachingFranka(gym.Env):
 
 
         # reward
-        distance = np.linalg.norm(end_effector_pos - self.target_pos)
-        reward = -distance
+        #distance = np.linalg.norm(end_effector_pos - self.target_pos)
+        #reward = -distance
+        reward = 0
 
         # done
         done = self.progress_buf >= self.max_episode_length - 1
-        done = done or distance <= 0.075
+        #done = done or distance <= 0.075
 
-        print("Distance:", distance)
+        #print("Distance:", distance)
         if done:
             print("Target or Maximum episode length reached")
             time.sleep(1)

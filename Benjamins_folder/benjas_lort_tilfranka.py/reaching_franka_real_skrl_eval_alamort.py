@@ -143,7 +143,7 @@ agent = PPO(models=models,
 # load checkpoints
 
 if control_space == "blind_agent":
-    agent.load("morten_tester_frank/best_agent.pt")
+    agent.load("Benjamins_folder/benjas_lort_tilfranka.py/best_agent.pt")
 else:
     print("wrong controll space")
 # Configure and instantiate the RL trainer
