@@ -217,8 +217,19 @@ class ReachingFranka(gym.Env):
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
                         noise = (2 * np.random.rand(3) - 1) * np.array([0.25, 0.25, 0.10])
-                        self.target_pos = np.array([0.5, 0.0, 0.2]) + noise
-                        self.target_pos[2]= max(self.target_pos[2], 0.1)
+                        self.target_pos = np.array([0.5, 0.5, 0.5])
+                        #self.target_pos = np.array([0, 0.5, 0.5])
+                        #self.target_pos = np.array([0.5, 0, 0.5])
+                        #self.target_pos = np.array([0.5, 0.5, 0.2])
+                        #self.target_pos = np.array([0.1, 0.1, 0.5])
+                        #self.target_pos = np.array([0.2, 0.2, 0.5])
+                        #self.target_pos = np.array([0.3, 0.3, 0.5])
+                        #self.target_pos = np.array([0.4, 0.4, 0.5])
+                        #self.target_pos = np.array([-0.4, 0.4, 0.3])
+                        #self.target_pos = np.array([-0.4, 0.4, 0.3])
+                        #self.target_pos = np.array([0.4, -0.4, 0.3])
+                        #self.target_pos = np.array([0.4, -0.4, 0.3])
+                        #self.target_pos[2]= max(self.target_pos[2], 0.1)
                     print("Target position:", self.target_pos)
                     break
                 except ValueError:
