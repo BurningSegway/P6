@@ -12,7 +12,6 @@ class ReachingFranka(gym.Env):
     def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="blind_agent", motion_type="waypoint", camera_tracking=False):
         # gym API
         self._drepecated_api = version.parse(gym.__version__) < version.parse(" 0.25.0")
-
         self.device = device
         self.control_space = control_space  # joint or cartesian
         self.motion_type = motion_type  # waypoint or impedance
@@ -30,16 +29,17 @@ class ReachingFranka(gym.Env):
             threading.Thread(target=self._update_target_from_camera).start()
 
         # spaces
+        self.observation_space = gym.spaces.Box(low=-1000, high=1000, shape=(36,), dtype=np.float32)
+        self.last_action = np.zeros(8, dtype=np.float32)
+        self.rock_target = np.zeros(7, dtype=np.float32)
+        #self.rock_target = np.array((1, 1, 1, 1, 1, 1, 1), dtype=np.float32)
+
         if self.control_space == "blind_agent": #setting the control space as the blind agents
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32) #setting the action space (7 for joint and 1 for gripper)
 
         else:
             raise ValueError("Invalid control space:", self.control_space)
         
-
-        self.observation_space = gym.spaces.Box(low=-1000, high=1000, shape=(36,), dtype=np.float32)
-        
-
         # init real franka
         print("Connecting to robot at {}...".format(robot_ip))
         self.robot = frankx.Robot(robot_ip)
@@ -74,7 +74,7 @@ class ReachingFranka(gym.Env):
         self.robot_default_gripper_pos = np.array([0.04])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
-        self.rock_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
+
 
         self.progress_buf = 1
         self.obs_buf = np.zeros((36,), dtype=np.float32)
@@ -123,45 +123,55 @@ class ReachingFranka(gym.Env):
         except frankx.InvalidOperationException:
             robot_state = self.robot.get_state(read_once=False)
 
-        # observations
+        # observation
+        #self.actions = gym.spaces.Box(low=-1000, high=1000, shape=(8,), dtype=np.float32)
+        #self.joint_pos = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32)
+        #self.joint_vel = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32)
+        #self.object_position = gym.spaces.Box(low=-1000, high=1000, shape=(3,), dtype=np.float32)
+        #self.target_object_position = gym.spaces.Box(low=-1000, high=1000, shape=(7,), dtype=np.float32)
 
-        #actions in observation
-        self.last_action = np.zeros(8, dtype=np.float32)
-        self.actions = self.last_action
 
-        #gripper instantiation
+        robot_dof_pos = np.array(robot_state.q)
+
+        robot_dof_vel = np.array(robot_state.dq)
+
+        end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
+
         self.gripper = self.robot.get_gripper()
         gripper_width = self.gripper.width()
         gripper_speed = self.gripper.__getattribute__("gripper_speed")
 
-        #Joint positions in observation
+        #print(end_effector_pos)
+
+        self.actions = self.last_action
         self.joint_pos = np.zeros((9,))
         self.joint_pos[0:7] = np.array(robot_state.q)
         self.joint_pos[7:8] = gripper_width/2
         self.joint_pos[8:9] = gripper_width/2
-
-        #Joint velocities in observation
+        
         self.joint_vel = np.zeros((9,))
         self.joint_vel[0:7] = np.array(robot_state.dq)
         self.joint_vel[7:8] = gripper_speed
         self.joint_vel[8:9] = gripper_speed
-
-        #Rock position
+        
+        print('self.joint_vel: ', self.joint_vel)
         self.object_position = self.target_pos
+        self.target_object_position = np.zeros(7,)
+        self.target_object_position[0:7] = self.rock_target
 
-        #Target position
-        self.target_object_position = self.rock_target
+        
 
-        #Observation creation
         self.obs_buf[0:8] =   self.actions
         self.obs_buf[8:17] =  self.joint_pos
         self.obs_buf[17:26] = self.joint_vel
         self.obs_buf[26:29] = self.object_position
-        self.obs_buf[29:36] = self.target_object_position 
+        self.obs_buf[29:36] = self.target_object_position # der er måske ikke en 36'th plads da den er 36 lang men har 0 med? så prøv at skriv 35 ??
+
+        # dette skal muligvis bruges til at finde ud af noget med rewards ift position ift målet men tror nu bare at det ordnes i agenten (tal med pierre om dette)
+        # get robot state
 
 
         # reward
-        end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
         distance = np.linalg.norm(end_effector_pos - self.target_pos)
         reward = -distance
 
@@ -204,7 +214,21 @@ class ReachingFranka(gym.Env):
                     if raw:
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
+                        noise = (2 * np.random.rand(3) - 1) * np.array([0.25, 0.25, 0.10])
+                        #self.target_pos = np.array([0.5, 0.5, 0.5]) #lige over den
+                        #self.target_pos = np.array([0, 0.5, 0.5]) # lig over den
+                        #self.target_pos = np.array([0.5, 0, 0.5]) #lige over den
+                        #self.target_pos = np.array([0.5, 0.5, 0.2]) # lige over den
+                        #self.target_pos = np.array([0.1, 0.1, 0.5]) # lige over den
+                        #self.target_pos = np.array([0.2, 0.2, 0.5]) # lige over den
+                        #self.target_pos = np.array([0.3, 0.3, 0.5])
+                        #self.target_pos = np.array([0.4, 0.4, 0.5])
+                        #self.target_pos = np.array([-0.4, 0.4, 0.3])
+                        #self.target_pos = np.array([-0.4, 0.4, 0.3])
+                        #self.target_pos = np.array([0.4, -0.4, 0.3])
+                        #self.target_pos = np.array([0.4, -0.4, 0.3]) #lige over den
                         self.target_pos = np.array([0.1, -0.1, 0.02])
+                        #self.target_pos[2]= max(self.target_pos[2], 0.1)
                     print("Target position:", self.target_pos)
                     break
                 except ValueError:
@@ -212,9 +236,8 @@ class ReachingFranka(gym.Env):
 
         # initial pose
         affine = frankx.Affine(frankx.Kinematics.forward(dof_pos.tolist()))
-        #affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
-        affine = affine * frankx.Affine(x=0, y=0, z=0)
-        
+        affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
+
         # motion type
         if self.motion_type == "waypoint":
             self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=False)
@@ -242,6 +265,7 @@ class ReachingFranka(gym.Env):
         print("action iss: ", action)
         #self.rock_target = self.robot_default_dof_pos[0:7]
         #self.rock_target = np.array((1, 1, 1, 1, 1, 1, 1), dtype=np.float32)
+        self.rock_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
         self.progress_buf += 1
 
         # control space
