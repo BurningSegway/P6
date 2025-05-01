@@ -161,8 +161,8 @@ class ReachingFranka(gym.Env):
 
 
         # reward
-        end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
-        distance = np.linalg.norm(end_effector_pos - self.target_pos)
+        self.end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
+        distance = np.linalg.norm(self.end_effector_pos - self.target_pos)
         reward = -distance
 
         # done
@@ -210,14 +210,14 @@ class ReachingFranka(gym.Env):
                 except ValueError:
                     print("Invalid input. Try something like: 0.65, 0.0, 0.2")
 
-        # initial pose
+        # initial pose with gripper
         affine = frankx.Affine(frankx.Kinematics.forward(dof_pos.tolist()))
         #affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
-        affine = affine * frankx.Affine(x=0, y=0, z=0)
+
         
         # motion type
         if self.motion_type == "waypoint":
-            self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=False)
+            self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=True)
         elif self.motion_type == "impedance":
             self.motion = frankx.ImpedanceMotion(500, 50)
         else:
@@ -239,11 +239,7 @@ class ReachingFranka(gym.Env):
 
     def step(self, action):
         self.last_action = action
-        print("action iss: ", action)
-        #self.rock_target = self.robot_default_dof_pos[0:7]
-        #self.rock_target = np.array((1, 1, 1, 1, 1, 1, 1), dtype=np.float32)
         self.progress_buf += 1
-
         # control space
         # joint
         if self.control_space == "blind_agent":
@@ -258,33 +254,13 @@ class ReachingFranka(gym.Env):
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
             affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
             
-        ##
-        #self.gripper.clamp()
-        #Noget med gripper
-        ##
         # cartesian
-        elif self.control_space == "cartesian":
-            action /= 100.0
-            if self.motion_type == "waypoint":
-                affine = frankx.Affine(x=action[0], y=action[1], z=action[2])
-            elif self.motion_type == "impedance":
-                # get robot pose
-                try:
-                    robot_pose = self.robot.current_pose(read_once=True)
-                except frankx.InvalidOperationException:
-                    robot_pose = self.robot.current_pose(read_once=False)
-                affine = robot_pose * frankx.Affine(x=action[0], y=action[1], z=action[2])
 
         # motion type
         # waypoint motion
         if self.motion_type == "waypoint":
             if self.control_space == "blind_agent":
                 self.motion.set_next_waypoint(frankx.Waypoint(affine))
-            elif self.control_space == "cartesian":
-                self.motion.set_next_waypoint(frankx.Waypoint(affine, frankx.Waypoint.Relative))
-        # impedance motion
-        elif self.motion_type == "impedance":
-            self.motion.target = affine
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
 
@@ -293,6 +269,10 @@ class ReachingFranka(gym.Env):
 
         observation, reward, done = self._get_observation_reward_done()
 
+        print("DEBUGGING")
+        print("action is: ", action)
+        print("Affine is: ", affine)
+        print("EE pose is: ", self.end_effector_pos)
         obs_array_type = ["joint action", "gripper close width", "joint position", "gripper position", "joint velocity", "gripper velocity", "stone x", "stone y", "stone z", "Target x", "Target y", "Target z", "Target quat"]
         print("oberservations is: ")
         for i in range(len(observation)):
