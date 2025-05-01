@@ -9,7 +9,7 @@ import frankx
 
 
 class ReachingFranka(gym.Env):
-    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="blind_agent", motion_type="waypoint", camera_tracking=False):
+    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="blind_agent", motion_type="impedance", camera_tracking=False):
         # gym API
         self._drepecated_api = version.parse(gym.__version__) < version.parse(" 0.25.0")
 
@@ -65,6 +65,7 @@ class ReachingFranka(gym.Env):
         self.motion = None
         self.motion_thread = None
 
+        #setting parameters
         self.dt = 1 / 100.0
         self.action_scale = 2.5
         self.dof_vel_scale = 0.1
@@ -73,9 +74,11 @@ class ReachingFranka(gym.Env):
         self.target_pos = np.array([0.65, 0.2, 0.2])
         self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
         self.rock_end_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
-        self.robot_default_gripper_pos = np.array([0.04])
+        self.robot_open_gripper_pos = np.array([0.04])
+        self.robot_closed_gripper_pos = np.array([0.0])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
+
 
 
         self.progress_buf = 1
@@ -143,9 +146,11 @@ class ReachingFranka(gym.Env):
         gripper_width = self.gripper.width()
         gripper_speed = self.gripper.__getattribute__("gripper_speed")
 
-        #print(end_effector_pos)
+        print()
+        print()
+        print()
 
-        self.actions = self.last_action
+
         self.joint_pos = np.zeros((9,))
         self.joint_pos[0:7] = np.array(robot_state.q)
         self.joint_pos[7:8] = gripper_width/2
@@ -161,7 +166,7 @@ class ReachingFranka(gym.Env):
         self.target_object_position = self.rock_end_target
  
 
-        self.obs_buf[0:8] =   self.actions
+        self.obs_buf[0:8] =   self.last_action
         self.obs_buf[8:17] =  self.joint_pos
         self.obs_buf[17:26] = self.joint_vel
         self.obs_buf[26:29] = self.object_position
@@ -200,13 +205,15 @@ class ReachingFranka(gym.Env):
         # open/close gripper
         # self.gripper.open()
         # self.gripper.clamp()
+        #self.width(0.0)
+        #self.robot.move(frankx.Gripper("172.16.0.2", -0.02, 20))
+
 
         # go to 1) safe position, 2) random position
         self.robot.move(frankx.JointMotion(self.robot_default_dof_pos.tolist()))
         dof_pos = self.robot_default_dof_pos # + 0.25 * (np.random.rand(7) - 0.5) #start position offset
         print(self.robot_default_dof_pos)
         self.robot.move(frankx.JointMotion(dof_pos.tolist()))
-        #self.robot.move(frankx.Gripper("172.16.0.2", -0.02, 20))
 
         # get target position from prompt
         if not self.camera_tracking:
@@ -254,8 +261,8 @@ class ReachingFranka(gym.Env):
     def step(self, action):
         self.last_action = action
         print("action is: ", action)
-        #self.rock_target = self.robot_default_dof_pos[0:7]
         self.rock_target = self.rock_end_target
+        self.target_pos = np.array([0.5, 0.0, 0.0])
         
         self.progress_buf += 1
         # control space
