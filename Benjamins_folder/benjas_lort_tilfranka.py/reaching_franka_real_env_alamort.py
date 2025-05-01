@@ -16,7 +16,7 @@ class ReachingFranka(gym.Env):
         self.device = device
         self.control_space = control_space  # joint or cartesian
         self.motion_type = motion_type  # waypoint or impedance
-        self.gripper = frankx.Gripper(robot_ip)  # Same IP as the robot
+        self.gripper = frankx.Gripper(robot_ip)  # this form deepseek who save my life and make gwippa work!
 
         if self.control_space == "cartesian" and self.motion_type == "impedance":
             # The operation of this mode (Cartesian-impedance) was adjusted later without being able to test it on the real robot.
@@ -75,7 +75,7 @@ class ReachingFranka(gym.Env):
         self.target_pos = np.array([0.65, 0.2, 0.2])
         self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
         self.rock_end_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
-        self.robot_open_gripper_pos = np.array([0.04])
+        self.robot_open_gripper_pos = np.array([0.08])
         self.robot_closed_gripper_pos = np.array([0.0])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
@@ -147,9 +147,6 @@ class ReachingFranka(gym.Env):
         gripper_width = self.gripper.width()
         gripper_speed = self.gripper.__getattribute__("gripper_speed")
 
-        print(self.gripper)
-        print(gripper_width)
-        print(gripper_speed)
 
 
         self.joint_pos = np.zeros((9,))
@@ -208,9 +205,9 @@ class ReachingFranka(gym.Env):
         # self.gripper.clamp()
         #self.width(0.0)
         #self.robot.move(frankx.Gripper("172.16.0.2", -0.02, 20))
-        self.gripper.move_async(self.robot_open_gripper_pos)
-        self.gripper.move_async(self.robot_closed_gripper_pos)
-        
+        self.gripper.move_async(self.robot_open_gripper_pos) ## reset gripper
+        print("waiting 5 secounds for gripper to reset")
+        time.sleep(5)
 
         # go to 1) safe position, 2) random position
         self.robot.move(frankx.JointMotion(self.robot_default_dof_pos.tolist()))
@@ -281,18 +278,15 @@ class ReachingFranka(gym.Env):
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action * self.action_scale)
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
             affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
-            
-        ##
-        #self.gripper.clamp()
-        #Noget med gripper
-        ##
+
+
         # cartesian
         elif self.control_space == "cartesian":
             action /= 100.0
             if self.motion_type == "waypoint":
                 affine = frankx.Affine(x=action[0], y=action[1], z=action[2])
             elif self.motion_type == "impedance":
-                # get robot pose
+        #get robot pose
                 try:
                     robot_pose = self.robot.current_pose(read_once=True)
                 except frankx.InvalidOperationException:
@@ -306,9 +300,11 @@ class ReachingFranka(gym.Env):
                 self.motion.set_next_waypoint(frankx.Waypoint(affine))
             elif self.control_space == "cartesian":
                 self.motion.set_next_waypoint(frankx.Waypoint(affine, frankx.Waypoint.Relative))
+       
         # impedance motion
         elif self.motion_type == "impedance":
             self.motion.target = affine
+            #gripper comand here?
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
 
