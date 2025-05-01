@@ -94,26 +94,26 @@ class ReachingFranka(gym.Env):
         self.gripper_lock = threading.Lock()
         
         # Start gripper control thread
-        self._gripper_running = True
-        self.gripper_control_thread = threading.Thread(target=self._gripper_control_loop)
-        self.gripper_control_thread.start()
+    #    self._gripper_running = True
+    #    self.gripper_control_thread = threading.Thread(target=self._gripper_control_loop)
+    #    self.gripper_control_thread.start()
 
-    def _gripper_control_loop(self):
-        while self._gripper_running:
-            if self.gripper_command_queue:
-                with self.gripper_lock:
-                    width = self.gripper_command_queue.pop(0)
-                
+    #def _gripper_control_loop(self):
+    #    while self._gripper_running:
+    #        if self.gripper_command_queue:
+    #            with self.gripper_lock:
+    #                width = self.gripper_command_queue.pop(0)
+    #            
                 # Non-blocking move with timeout
-                try:
-                    self.gripper.move(width, timeout=0.1)  # Short timeout allows interruption
-                except:
-                    pass  # Ignore timeouts - we'll retry in next loop
-            time.sleep(0.01)  # Small sleep to prevent CPU overload
+    #            try:
+    #                self.gripper.move(width, timeout=0.1)  # Short timeout allows interruption
+    #            except:
+    #                pass  # Ignore timeouts - we'll retry in next loop
+    #        time.sleep(0.01)  # Small sleep to prevent CPU overload
         
-    def _send_gripper_command(self, width):
-        with self.gripper_lock:
-            self.gripper_command_queue.append(width)
+    #def _send_gripper_command(self, width):
+    #    with self.gripper_lock:
+    #        self.gripper_command_queue.append(width)
 
     def _update_target_from_camera(self):
         pixel_to_meter = 1.11 / 375  # m/px: adjust for custom cases
@@ -159,19 +159,6 @@ class ReachingFranka(gym.Env):
         except frankx.InvalidOperationException:
             robot_state = self.robot.get_state(read_once=False)
 
-        # observation
-        #self.actions = gym.spaces.Box(low=-1000, high=1000, shape=(8,), dtype=np.float32)
-        #self.joint_pos = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32)
-        #self.joint_vel = gym.spaces.Box(low=-1000, high=1000, shape=(9,), dtype=np.float32)
-        #self.object_position = gym.spaces.Box(low=-1000, high=1000, shape=(3,), dtype=np.float32)
-        #self.target_object_position = gym.spaces.Box(low=-1000, high=1000, shape=(7,), dtype=np.float32)
-
-
-        robot_dof_pos = np.array(robot_state.q)
-
-        robot_dof_vel = np.array(robot_state.dq)
-
-        end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
 
         #self.gripper = self.robot.get_gripper()
         gripper_width = self.gripper.width()
@@ -190,7 +177,6 @@ class ReachingFranka(gym.Env):
         self.joint_vel[8:9] = gripper_speed
         
         self.object_position = self.target_pos
-        #self.target_object_position = np.zeros(7,)
         self.target_object_position = self.rock_end_target
  
 
@@ -200,18 +186,16 @@ class ReachingFranka(gym.Env):
         self.obs_buf[26:29] = self.object_position
         self.obs_buf[29:36] = self.target_object_position # der er måske ikke en 36'th plads da den er 36 lang men har 0 med? så prøv at skriv 35 ??
 
-        # dette skal muligvis bruges til at finde ud af noget med rewards ift position ift målet men tror nu bare at det ordnes i agenten (tal med pierre om dette)
         # get robot state
 
-
         # reward
-        distance = np.linalg.norm(end_effector_pos - self.target_pos)
-        reward = -distance
-        #reward = 0
+        #distance = np.linalg.norm(end_effector_pos - self.target_pos)
+        #reward = -distance
+        reward = 0
 
         # done
         done = self.progress_buf >= self.max_episode_length - 1
-        done = done or distance <= 0.075
+        done = done# or distance <= 0.075
 
         #print("Distance:", distance)
         if done:
@@ -240,7 +224,9 @@ class ReachingFranka(gym.Env):
         #self.gripper.move_async(self.robot_open_gripper_pos) ## reset gripper
         #print("waiting 5 secounds for gripper to reset")
 
-        self._send_gripper_command(0.04)
+        self.gripper.move(0.04)
+
+        self.gripper.move(0.08)
 
         # get target position from prompt
         if not self.camera_tracking:
@@ -251,13 +237,13 @@ class ReachingFranka(gym.Env):
                     if raw:
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
-                        #noise = (2 * np.random.rand(3) - 1) * np.array([0.25, 0.25, 0.10])
-                        self.target_pos = np.array([0.5, 0.0, 0.0]) # + noise
-                        #self.target_pos[2]= max(self.target_pos[2], 0.1)
+                        
+                        self.target_pos = np.array([0.5, 0.0, 0.0]) #!!Where is the rock!!
+                        
                     print("Target position:", self.target_pos)
                     break
                 except ValueError:
-                    print("Invalid input. Try something like: 0.65, 0.0, 0.2")
+                    print("Invalid input.")
 
         # initial pose
         affine = frankx.Affine(frankx.Kinematics.forward(dof_pos.tolist()))
@@ -287,7 +273,6 @@ class ReachingFranka(gym.Env):
 
     def step(self, action):
         self.last_action = action
-        print("action is: ", action)
         self.rock_target = self.rock_end_target
         self.target_pos = np.array([0.5, 0.0, 0.0])
         
@@ -331,7 +316,12 @@ class ReachingFranka(gym.Env):
         # impedance motion
         if self.motion_type == "impedance":
             self.motion.target = affine
-            #self.gripper.move_async(action[7:8].tolist())#gripper comand here?
+        
+
+        else:
+            raise ValueError("Invalid motion type:", self.motion_type)
+        ###
+                    #self.gripper.move_async(action[7:8].tolist())#gripper comand here?
         
         #Gripper action goes here!!
 
@@ -340,17 +330,24 @@ class ReachingFranka(gym.Env):
         ##
         #koden herunder omskrives så det kun udføre komandoen i 0.01 skunder så det ikke er pis nu går jeg til pause... tak for nu
         ##
-        gripper_action = action[7]
-        if gripper_action > 0.5:  # Close
-            if not hasattr(self, '_gripper_motion') or self._gripper_motion.is_done():
-                self._gripper_motion = self.gripper.move_async(0.0)
-        elif gripper_action < -0.5:  # Open
-            if not hasattr(self, '_gripper_motion') or self._gripper_motion.is_done():
-                self._gripper_motion = self.gripper.move_async(0.08)
-            
-        else:
-            raise ValueError("Invalid motion type:", self.motion_type)
+        #gripper_action = action[7:8]
+        #print("gripper action is:", gripper_action)
+        #if gripper_action > 0.5:  # Close
+        #    if not hasattr(self, '_gripper_motion') or self._gripper_motion.is_done():
+        #        self._gripper_motion = self.gripper.move_async(0.0)
+        #elif gripper_action < -0.5:  # Open
+        #    if not hasattr(self, '_gripper_motion') or self._gripper_motion.is_done():
+        #        self._gripper_motion = self.gripper.move_async(0.08)
 
+        ##
+        # Control gripper (assuming action[7] is gripper control)
+        
+
+        gripper_action = (action[7:8]/2)*0.01
+        self.gripper.move(gripper_action) #
+###
+#Start her imorgen. find en komando der sætter dens vle istedet for dens pos fordi detteher er dårligt
+###
         # the use of time.sleep is for simplicity. This does not guarantee control at a specific frequency
         time.sleep(0.1)  # lower frequency, at 30Hz there are discontinuities
 
