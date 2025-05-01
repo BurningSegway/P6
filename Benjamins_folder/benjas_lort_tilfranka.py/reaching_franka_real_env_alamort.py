@@ -72,6 +72,7 @@ class ReachingFranka(gym.Env):
         self.robot_dof_speed_scales = 0.3 #This controlls the speed do not put above 0.5
         self.target_pos = np.array([0.65, 0.2, 0.2])
         self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
+        self.rock_starting_pos = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
         self.robot_default_gripper_pos = np.array([0.04])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
@@ -253,8 +254,10 @@ class ReachingFranka(gym.Env):
     def step(self, action):
         self.last_action = action
         print("action is: ", action)
-        self.rock_target = self.robot_default_dof_pos[0:7]
+        #self.rock_target = self.robot_default_dof_pos[0:7]
+        self.rock_target = self.rock_target
         self.progress_buf += 1
+
         # control space
         # joint
         if self.control_space == "blind_agent":
