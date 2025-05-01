@@ -74,7 +74,8 @@ class ReachingFranka(gym.Env):
         self.robot_default_gripper_pos = np.array([0.04])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
-        self.rock_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
+        #self.rock_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
+        self.rock_target = np.array([-0.7009, 0.9867, -1.6942, 0, 0, 0, 0])
 
         self.progress_buf = 1
         self.obs_buf = np.zeros((36,), dtype=np.float32)
@@ -127,12 +128,12 @@ class ReachingFranka(gym.Env):
 
         #actions in observation
         self.last_action = np.zeros(8, dtype=np.float32)
-        self.actions = self.last_action
 
         #gripper instantiation
         self.gripper = self.robot.get_gripper()
         gripper_width = self.gripper.width()
         gripper_speed = self.gripper.__getattribute__("gripper_speed")
+        self.gripper.open()
 
         #Joint positions in observation
         self.joint_pos = np.zeros((9,))
@@ -153,7 +154,7 @@ class ReachingFranka(gym.Env):
         self.target_object_position = self.rock_target
 
         #Observation creation
-        self.obs_buf[0:8] =   self.actions
+        self.obs_buf[0:8] =   self.last_action
         self.obs_buf[8:17] =  self.joint_pos
         self.obs_buf[17:26] = self.joint_vel
         self.obs_buf[26:29] = self.object_position
@@ -187,7 +188,7 @@ class ReachingFranka(gym.Env):
         self.motion_thread = None
 
         # open/close gripper
-        # self.gripper.open()
+        #self.gripper.open()
         # self.gripper.clamp()
 
         # go to 1) safe position, 2) random position
@@ -204,7 +205,8 @@ class ReachingFranka(gym.Env):
                     if raw:
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
-                        self.target_pos = np.array([0.1, -0.1, 0.02])
+                        #self.target_pos = np.array([0.1, -0.1, 0.02])
+                        self.target_pos = np.array([0.09, -1.33, -1.22])
                     print("Target position:", self.target_pos)
                     break
                 except ValueError:
@@ -213,7 +215,6 @@ class ReachingFranka(gym.Env):
         # initial pose with gripper
         affine = frankx.Affine(frankx.Kinematics.forward(dof_pos.tolist()))
         affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
-
         
         # motion type
         if self.motion_type == "waypoint":
@@ -243,47 +244,48 @@ class ReachingFranka(gym.Env):
         # control space
         # joint
         if self.control_space == "blind_agent":
-            print("går jeg herind")
+            #print("går jeg herind")
             # get robot state
             try:
                 robot_state = self.robot.get_state(read_once=True)
             except frankx.InvalidOperationException:
                 robot_state = self.robot.get_state(read_once=False)
             # forward kinematics
+
             dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale) # fikser at der ikke er gripper med i øjeblikket... måske
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action * self.action_scale)
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
             affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
-        """    
+            #print("går jeg herind")
         # cartesian
         elif self.control_space == "cartesian":
-            print("cartesian")
+            #print("cartesian")
             action /= 100.0
             if self.motion_type == "waypoint":
-                print("Cartesian: waypoint")
+                #print("Cartesian: waypoint")
                 affine = frankx.Affine(x=action[0], y=action[1], z=action[2])
             elif self.motion_type == "impedance":
-                print("Cartesian: impedance")
+                #print("Cartesian: impedance")
                 # get robot pose
                 try:
                     robot_pose = self.robot.current_pose(read_once=True)
                 except frankx.InvalidOperationException:
                     robot_pose = self.robot.current_pose(read_once=False)
                 affine = robot_pose * frankx.Affine(x=action[0], y=action[1], z=action[2])
-        """
+        
         # motion type
         # waypoint motion
         if self.motion_type == "waypoint":
-            print("waypoint")
+            #print("går jeg herind")
             if self.control_space == "blind_agent":
-                print("waypoint: blind")
+                #print("går jeg herind")
                 self.motion.set_next_waypoint(frankx.Waypoint(affine))
             elif self.control_space == "cartesian":
-                print("waypoint: cartesian")
+                #print("waypoint: cartesian")
                 self.motion.set_next_waypoint(frankx.Waypoint(affine, frankx.Waypoint.Relative))
         # impedance motion
         elif self.motion_type == "impedance":
-            print("impedance")
+            #print("impedance")
             self.motion.target = affine
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
