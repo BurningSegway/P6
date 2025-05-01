@@ -212,7 +212,7 @@ class ReachingFranka(gym.Env):
 
         # initial pose with gripper
         affine = frankx.Affine(frankx.Kinematics.forward(dof_pos.tolist()))
-        #affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
+        affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
 
         
         # motion type
