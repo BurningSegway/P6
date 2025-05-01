@@ -204,7 +204,6 @@ class ReachingFranka(gym.Env):
         # go to 1) safe position, 2) random position
         self.robot.move(frankx.JointMotion(self.robot_default_dof_pos.tolist()))
         dof_pos = self.robot_default_dof_pos # + 0.25 * (np.random.rand(7) - 0.5) #start position offset
-        print(self.robot_default_dof_pos)
         self.robot.move(frankx.JointMotion(dof_pos.tolist()))
         #self.gripper.move(0.04)
         # get target position from prompt
@@ -266,7 +265,8 @@ class ReachingFranka(gym.Env):
         self.last_action = action
         print("action iss: ", action)
         #self.rock_target = self.robot_default_dof_pos[0:7]
-        self.rock_target = np.array((1, 1, 1, 1, 1, 1, 1), dtype=np.float32)
+        #self.rock_target = np.array((1, 1, 1, 1, 1, 1, 1), dtype=np.float32)
+        self.rock_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
         self.progress_buf += 1
 
         # control space
@@ -318,14 +318,58 @@ class ReachingFranka(gym.Env):
 
         observation, reward, done = self._get_observation_reward_done()
 
-        obs_array_type = ["actions", "joint_pos", "joint_vel", "object_position", "target_object_position"]
+        obs_array_type = ["joint action", "gripper close width", "joint position", "gripper position", "joint velocity", "gripper velocity", "stone x", "stone y", "stone z", "Target x", "Target y", "Target z", "Target quat"]
         print("oberservations is: ")
         for i in range(len(observation)):
-            if i<=7: print(obs_array_type[0], i+1, "is: ", observation[i])
-            if 7<i<=16: print(obs_array_type[1], i-7, "is: ", observation[i])
-            if 16<i<=25: print(obs_array_type[2], i-16, "is: ", observation[i])
-            if 25<i<=28: print(obs_array_type[3], i-24, "is: ", observation[i])
-            if 28<i<=35: print(obs_array_type[4], i-27, "is: ", observation[i])
+            if i<=6: print(obs_array_type[0], i+1, "is: ", observation[i])
+            if 6<i<8: print(obs_array_type[1], "is: ", observation[i])
+            if 7<i<=14: print(obs_array_type[2], i-7, "is: ", observation[i])
+            if 14<i<=16: print(obs_array_type[3], i-14, "is: ", observation[i])
+            if 16<i<=23: print(obs_array_type[4], i-16, "is: ", observation[i])
+            if 23<i<=25: print(obs_array_type[5], i-23, "is: ", observation[i])
+            if 25<i<=28: print(obs_array_type[5+i-25], "is: ", observation[i])
+            if 28<i<=31: print(obs_array_type[8+i-28], "is: ", observation[i])
+            if 31<i<=35: print(obs_array_type[12], i-31, "is: ", observation[i])
+
+
+        #joint action 1
+        #joint action 2
+        #joint action 3
+        #joint action 4
+        #joint action 5
+        #joint action 6
+        #joint action 7
+        #gripper close width
+        #Join position 1
+        #Join position 2
+        #Join position 3
+        #Join position 4
+        #Join position 5
+        #Join position 6
+        #Join position 7
+        #gripper position 1
+        #gripper position 2
+        #Join velocity 1
+        #Join velocity 2
+        #Join velocity 3
+        #Join velocity 4
+        #Join velocity 5
+        #Join velocity 6
+        #Join velocity 7
+        #gripper velocity 1
+        #gripper velocity 2
+        #Object x
+        #Object y
+        #Object z
+        #Target x
+        #Target y
+        #Target Z
+        #Target quat 1
+        #Target quat 2
+        #Target quat 3
+        #Target quat 4 
+
+
 
         if self._drepecated_api:
             return observation, reward, done, {}
