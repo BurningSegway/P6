@@ -295,14 +295,14 @@ class ReachingFranka(gym.Env):
 
         # motion type
         # waypoint motion
-        if self.motion_type == "waypoint":
-            if self.control_space == "blind_agent":
-                self.motion.set_next_waypoint(frankx.Waypoint(affine))
-            elif self.control_space == "cartesian":
-                self.motion.set_next_waypoint(frankx.Waypoint(affine, frankx.Waypoint.Relative))
+        #if self.motion_type == "waypoint":
+        #    if self.control_space == "blind_agent":
+        #        self.motion.set_next_waypoint(frankx.Waypoint(affine))
+        #    elif self.control_space == "cartesian":
+        #        self.motion.set_next_waypoint(frankx.Waypoint(affine, frankx.Waypoint.Relative))
        
         # impedance motion
-        elif self.motion_type == "impedance":
+        if self.motion_type == "impedance":
             self.motion.target = affine
             #gripper comand here?
         else:
