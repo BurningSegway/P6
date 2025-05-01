@@ -146,9 +146,9 @@ class ReachingFranka(gym.Env):
         gripper_width = self.gripper.width()
         gripper_speed = self.gripper.__getattribute__("gripper_speed")
 
-        print()
-        print()
-        print()
+        print(self.gripper)
+        print(gripper_width)
+        print(gripper_speed)
 
 
         self.joint_pos = np.zeros((9,))
