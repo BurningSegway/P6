@@ -243,6 +243,7 @@ class ReachingFranka(gym.Env):
         # control space
         # joint
         if self.control_space == "blind_agent":
+            print("blind")
             # get robot state
             try:
                 robot_state = self.robot.get_state(read_once=True)
@@ -256,10 +257,13 @@ class ReachingFranka(gym.Env):
             
         # cartesian
         elif self.control_space == "cartesian":
+            print("cartesian")
             action /= 100.0
             if self.motion_type == "waypoint":
+                print("Cartesian: waypoint")
                 affine = frankx.Affine(x=action[0], y=action[1], z=action[2])
             elif self.motion_type == "impedance":
+                print("Cartesian: impedance")
                 # get robot pose
                 try:
                     robot_pose = self.robot.current_pose(read_once=True)
@@ -270,12 +274,16 @@ class ReachingFranka(gym.Env):
         # motion type
         # waypoint motion
         if self.motion_type == "waypoint":
+            print("waypoint")
             if self.control_space == "blind_agent":
+                print("waypoint: blind")
                 self.motion.set_next_waypoint(frankx.Waypoint(affine))
             elif self.control_space == "cartesian":
+                print("waypoint: cartesian")
                 self.motion.set_next_waypoint(frankx.Waypoint(affine, frankx.Waypoint.Relative))
         # impedance motion
         elif self.motion_type == "impedance":
+            print("impedance")
             self.motion.target = affine
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
