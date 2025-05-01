@@ -17,7 +17,9 @@ class ReachingFranka(gym.Env):
         self.control_space = control_space  # joint or cartesian
         self.motion_type = motion_type  # waypoint or impedance
         self.gripper = frankx.Gripper(robot_ip)  # this form deepseek who save my life and make gwippa work!
-
+        ##
+        
+        ##
         if self.control_space == "cartesian" and self.motion_type == "impedance":
             # The operation of this mode (Cartesian-impedance) was adjusted later without being able to test it on the real robot.
             # Dangerous movements may occur for the operator and the robot.
@@ -76,6 +78,7 @@ class ReachingFranka(gym.Env):
         self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
         self.rock_end_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
         self.robot_open_gripper_pos = np.array([0.08])
+        self.robot_middle_gripper_pos = np.array([0.04])
         self.robot_closed_gripper_pos = np.array([0.0])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
@@ -84,6 +87,33 @@ class ReachingFranka(gym.Env):
 
         self.progress_buf = 1
         self.obs_buf = np.zeros((36,), dtype=np.float32)
+
+        self.gripper = frankx.Gripper(robot_ip)
+        self.gripper_thread = None
+        self.gripper_command_queue = []
+        self.gripper_lock = threading.Lock()
+        
+        # Start gripper control thread
+        self._gripper_running = True
+        self.gripper_control_thread = threading.Thread(target=self._gripper_control_loop)
+        self.gripper_control_thread.start()
+
+    def _gripper_control_loop(self):
+        while self._gripper_running:
+            if self.gripper_command_queue:
+                with self.gripper_lock:
+                    width = self.gripper_command_queue.pop(0)
+                
+                # Non-blocking move with timeout
+                try:
+                    self.gripper.move(width, timeout=0.1)  # Short timeout allows interruption
+                except:
+                    pass  # Ignore timeouts - we'll retry in next loop
+            time.sleep(0.01)  # Small sleep to prevent CPU overload
+        
+    def _send_gripper_command(self, width):
+        with self.gripper_lock:
+            self.gripper_command_queue.append(width)
 
     def _update_target_from_camera(self):
         pixel_to_meter = 1.11 / 375  # m/px: adjust for custom cases
@@ -143,7 +173,7 @@ class ReachingFranka(gym.Env):
 
         end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
 
-        self.gripper = self.robot.get_gripper()
+        #self.gripper = self.robot.get_gripper()
         gripper_width = self.gripper.width()
         gripper_speed = self.gripper.__getattribute__("gripper_speed")
 
@@ -190,6 +220,7 @@ class ReachingFranka(gym.Env):
 
         return self.obs_buf, reward, done
 
+
     def reset(self):
         print("Resetting...")
 
@@ -200,20 +231,16 @@ class ReachingFranka(gym.Env):
         self.motion = None
         self.motion_thread = None
 
-        # open/close gripper
-        # self.gripper.open()
-        # self.gripper.clamp()
-        #self.width(0.0)
-        #self.robot.move(frankx.Gripper("172.16.0.2", -0.02, 20))
-        self.gripper.move_async(self.robot_open_gripper_pos) ## reset gripper
-        print("waiting 5 secounds for gripper to reset")
-        time.sleep(5)
-
         # go to 1) safe position, 2) random position
         self.robot.move(frankx.JointMotion(self.robot_default_dof_pos.tolist()))
         dof_pos = self.robot_default_dof_pos # + 0.25 * (np.random.rand(7) - 0.5) #start position offset
-        print(self.robot_default_dof_pos)
+        #print(self.robot_default_dof_pos)
         self.robot.move(frankx.JointMotion(dof_pos.tolist()))
+        #self.gripper.move_async(self.robot_middle_gripper_pos) ## reset gripper
+        #self.gripper.move_async(self.robot_open_gripper_pos) ## reset gripper
+        #print("waiting 5 secounds for gripper to reset")
+
+        self._send_gripper_command(0.04)
 
         # get target position from prompt
         if not self.camera_tracking:
@@ -304,7 +331,23 @@ class ReachingFranka(gym.Env):
         # impedance motion
         if self.motion_type == "impedance":
             self.motion.target = affine
-            #gripper comand here?
+            #self.gripper.move_async(action[7:8].tolist())#gripper comand here?
+        
+        #Gripper action goes here!!
+
+        # Control gripper without blocking
+        
+        ##
+        #koden herunder omskrives så det kun udføre komandoen i 0.01 skunder så det ikke er pis nu går jeg til pause... tak for nu
+        ##
+        gripper_action = action[7]
+        if gripper_action > 0.5:  # Close
+            if not hasattr(self, '_gripper_motion') or self._gripper_motion.is_done():
+                self._gripper_motion = self.gripper.move_async(0.0)
+        elif gripper_action < -0.5:  # Open
+            if not hasattr(self, '_gripper_motion') or self._gripper_motion.is_done():
+                self._gripper_motion = self.gripper.move_async(0.08)
+            
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
 
