@@ -255,8 +255,7 @@ class ReachingFranka(gym.Env):
         self.last_action = action
         print("action is: ", action)
         #self.rock_target = self.robot_default_dof_pos[0:7]
-        self.rock_target = self.rock_target
-        self.progress_buf += 1
+        self.rock_target = self.rock_starting_pos
 
         # control space
         # joint
