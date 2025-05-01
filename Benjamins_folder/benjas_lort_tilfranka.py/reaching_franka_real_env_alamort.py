@@ -3,9 +3,9 @@ import time
 import threading
 import numpy as np
 from packaging import version
-from frankx import Robot, Gripper
 
 import frankx
+
 
 
 class ReachingFranka(gym.Env):
@@ -16,6 +16,7 @@ class ReachingFranka(gym.Env):
         self.device = device
         self.control_space = control_space  # joint or cartesian
         self.motion_type = motion_type  # waypoint or impedance
+        self.gripper = frankx.Gripper(robot_ip)  # Same IP as the robot
 
         if self.control_space == "cartesian" and self.motion_type == "impedance":
             # The operation of this mode (Cartesian-impedance) was adjusted later without being able to test it on the real robot.
@@ -207,7 +208,9 @@ class ReachingFranka(gym.Env):
         # self.gripper.clamp()
         #self.width(0.0)
         #self.robot.move(frankx.Gripper("172.16.0.2", -0.02, 20))
-
+        self.gripper.move_async(self.robot_open_gripper_pos)
+        self.gripper.move_async(self.robot_closed_gripper_pos)
+        
 
         # go to 1) safe position, 2) random position
         self.robot.move(frankx.JointMotion(self.robot_default_dof_pos.tolist()))
@@ -313,6 +316,20 @@ class ReachingFranka(gym.Env):
         time.sleep(0.1)  # lower frequency, at 30Hz there are discontinuities
 
         observation, reward, done = self._get_observation_reward_done()
+
+        obs_array_type = ["joint action", "gripper close width", "joint position", "gripper position", "joint velocity", "gripper velocity", "stone x", "stone y", "stone z", "Target x", "Target y", "Target z", "Target quat"]
+        print("oberservations is: ")
+        for i in range(len(observation)):
+            if i<=6: print(obs_array_type[0], i+1, "is: ", observation[i])
+            if 6<i<8: print(obs_array_type[1], "is: ", observation[i])
+            if 7<i<=14: print(obs_array_type[2], i-7, "is: ", observation[i])
+            if 14<i<=16: print(obs_array_type[3], i-14, "is: ", observation[i])
+            if 16<i<=23: print(obs_array_type[4], i-16, "is: ", observation[i])
+            if 23<i<=25: print(obs_array_type[5], i-23, "is: ", observation[i])
+            if 25<i<=28: print(obs_array_type[5+i-25], "is: ", observation[i])
+            if 28<i<=31: print(obs_array_type[8+i-28], "is: ", observation[i])
+            if 31<i<=35: print(obs_array_type[12], i-31, "is: ", observation[i])
+
 
 
         if self._drepecated_api:
