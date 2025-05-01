@@ -243,7 +243,7 @@ class ReachingFranka(gym.Env):
         # control space
         # joint
         if self.control_space == "blind_agent":
-            print("blind")
+            print("går jeg herind")
             # get robot state
             try:
                 robot_state = self.robot.get_state(read_once=True)
@@ -254,7 +254,7 @@ class ReachingFranka(gym.Env):
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action * self.action_scale)
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
             affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
-            
+        """    
         # cartesian
         elif self.control_space == "cartesian":
             print("cartesian")
@@ -270,7 +270,7 @@ class ReachingFranka(gym.Env):
                 except frankx.InvalidOperationException:
                     robot_pose = self.robot.current_pose(read_once=False)
                 affine = robot_pose * frankx.Affine(x=action[0], y=action[1], z=action[2])
-
+        """
         # motion type
         # waypoint motion
         if self.motion_type == "waypoint":
