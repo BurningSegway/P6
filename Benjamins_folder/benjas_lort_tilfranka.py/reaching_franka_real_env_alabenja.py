@@ -240,7 +240,6 @@ class ReachingFranka(gym.Env):
     def step(self, action):
         self.last_action = action
         self.progress_buf += 1
-        print("action iss: ", action)
         # control space
         # joint
         if self.control_space == "blind_agent":
@@ -254,29 +253,14 @@ class ReachingFranka(gym.Env):
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action * self.action_scale)
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
             affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
+            
         # cartesian
-        elif self.control_space == "cartesian":
-            action /= 100.0
-            if self.motion_type == "waypoint":
-                affine = frankx.Affine(x=action[0], y=action[1], z=action[2])
-            elif self.motion_type == "impedance":
-                # get robot pose
-                try:
-                    robot_pose = self.robot.current_pose(read_once=True)
-                except frankx.InvalidOperationException:
-                    robot_pose = self.robot.current_pose(read_once=False)
-                affine = robot_pose * frankx.Affine(x=action[0], y=action[1], z=action[2])
 
         # motion type
         # waypoint motion
         if self.motion_type == "waypoint":
             if self.control_space == "blind_agent":
                 self.motion.set_next_waypoint(frankx.Waypoint(affine))
-            elif self.control_space == "cartesian":
-                self.motion.set_next_waypoint(frankx.Waypoint(affine, frankx.Waypoint.Relative))
-        # impedance motion
-        elif self.motion_type == "impedance":
-            self.motion.target = affine
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
 
@@ -285,13 +269,10 @@ class ReachingFranka(gym.Env):
 
         observation, reward, done = self._get_observation_reward_done()
 
-
-        
         print("DEBUGGING")
         print("action is: ", action)
         print("Affine is: ", affine)
         print("EE pose is: ", self.end_effector_pos)
-
         obs_array_type = ["joint action", "gripper close width", "joint position", "gripper position", "joint velocity", "gripper velocity", "stone x", "stone y", "stone z", "Target x", "Target y", "Target z", "Target quat"]
         print("oberservations is: ")
         for i in range(len(observation)):
