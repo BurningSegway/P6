@@ -243,9 +243,9 @@ class ReachingFranka(gym.Env):
         affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
 
         # motion type
-        if self.motion_type == "waypoint":
-            self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=False)
-        elif self.motion_type == "impedance":
+        #if self.motion_type == "waypoint":
+        #    self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=False)
+        if self.motion_type == "impedance":
             self.motion = frankx.ImpedanceMotion(500, 50)
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
@@ -286,17 +286,17 @@ class ReachingFranka(gym.Env):
 
 
         # cartesian
-        elif self.control_space == "cartesian":
-            action /= 100.0
-            if self.motion_type == "waypoint":
-                affine = frankx.Affine(x=action[0], y=action[1], z=action[2])
-            elif self.motion_type == "impedance":
+        #elif self.control_space == "cartesian":
+        #    action /= 100.0
+        #    if self.motion_type == "waypoint":
+        #        affine = frankx.Affine(x=action[0], y=action[1], z=action[2])
+        #    elif self.motion_type == "impedance":
         #get robot pose
-                try:
-                    robot_pose = self.robot.current_pose(read_once=True)
-                except frankx.InvalidOperationException:
-                    robot_pose = self.robot.current_pose(read_once=False)
-                affine = robot_pose * frankx.Affine(x=action[0], y=action[1], z=action[2])
+        #        try:
+        #            robot_pose = self.robot.current_pose(read_once=True)
+        #        except frankx.InvalidOperationException:
+        #            robot_pose = self.robot.current_pose(read_once=False)
+        #        affine = robot_pose * frankx.Affine(x=action[0], y=action[1], z=action[2])
 
         # motion type
         # waypoint motion
@@ -314,26 +314,11 @@ class ReachingFranka(gym.Env):
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
         ###
-                    #self.gripper.move_async(action[7:8].tolist())#gripper comand here?
+                    #self.gripper.move_async(action[7:8])#gripper comand here?
         
-        #Gripper action goes here!!
-
-        # Control gripper without blocking
-        
-        ##
-        #koden herunder omskrives så det kun udføre komandoen i 0.01 skunder så det ikke er pis nu går jeg til pause... tak for nu
-        ##
-        #gripper_action = action[7:8]
-        #print("gripper action is:", gripper_action)
-        #if gripper_action > 0.5:  # Close
-        #    if not hasattr(self, '_gripper_motion') or self._gripper_motion.is_done():
-        #        self._gripper_motion = self.gripper.move_async(0.0)
-        #elif gripper_action < -0.5:  # Open
-        #    if not hasattr(self, '_gripper_motion') or self._gripper_motion.is_done():
-        #        self._gripper_motion = self.gripper.move_async(0.08)
-
-        ##
-        def translate(value, leftMin, leftMax, rightMin, rightMax):
+        #Gripper action goes here
+        #This code makes the gripper action executeble (maps from 20 : -20 to 0.08 : 0)
+        def translate_a_to_c(value, leftMin, leftMax, rightMin, rightMax):
             # Figure out how 'wide' each range is
             leftSpan = leftMax - leftMin
             rightSpan = rightMax - rightMin
@@ -344,15 +329,21 @@ class ReachingFranka(gym.Env):
             # Convert the 0-1 range into a value in the right range.
             return rightMin + (valueScaled * rightSpan)
 
-        action[7:8] = translate(action[7:8], 0, 20, 0.00, 0.08)
+        def translate_c_to_a(value, rightMin, rightMax, leftMin, leftMax):
+            # Figure out how 'wide' each range is
+            leftSpan = leftMax - leftMin
+            rightSpan = rightMax - rightMin
+
+            # Convert the left range into a 0-1 range (float)
+            valueScaled = float(value - rightMin) / float(rightSpan)
+
+            # Convert the 0-1 range into a value in the right range.
+            return leftMin + (valueScaled * leftSpan)
+
         #gripper_action = (action[7:8]*0.01)/2
-        
-        self.gripper.move(action[7:8])
 
+        self.gripper.move(translate_a_to_c(action[7:8], 0, 20, 0.00, 0.08))
 
-###
-#Start her imorgen. find en komando der sætter dens vle istedet for dens pos fordi detteher er dårligt
-###
         # the use of time.sleep is for simplicity. This does not guarantee control at a specific frequency
         time.sleep(0.1)  # lower frequency, at 30Hz there are discontinuities
 
