@@ -213,8 +213,8 @@ class ReachingFranka(gym.Env):
         affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
 
         # motion type
-        if self.motion_type == "waypoint":
-            self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=False)
+        #if self.motion_type == "waypoint":
+        #    self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=False)
         if self.motion_type == "impedance":
             self.motion = frankx.ImpedanceMotion(500, 50)
         else:
@@ -292,7 +292,7 @@ class ReachingFranka(gym.Env):
 
         #gripper_action = (action[7:8]*0.01)/2
 
-        self.gripper.move(translate_a_to_c(action[7:8], 0, 20, 0.00, 0.08)/2)
+        self.gripper.move_async(translate_a_to_c(action[7:8], 0, 20, 0.00, 0.08)/2)
 
         # the use of time.sleep is for simplicity. This does not guarantee control at a specific frequency
         time.sleep(0.1)  # lower frequency, at 30Hz there are discontinuities
