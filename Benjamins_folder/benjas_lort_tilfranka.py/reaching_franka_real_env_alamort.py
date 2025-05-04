@@ -16,10 +16,7 @@ class ReachingFranka(gym.Env):
         self.device = device
         self.control_space = control_space  # joint or cartesian
         self.motion_type = motion_type  # waypoint or impedance
-        self.gripper = frankx.Gripper(robot_ip)  # this form deepseek who save my life and make gwippa work!
-        ##
         
-        ##
         if self.control_space == "cartesian" and self.motion_type == "impedance":
             # The operation of this mode (Cartesian-impedance) was adjusted later without being able to test it on the real robot.
             # Dangerous movements may occur for the operator and the robot.
@@ -47,6 +44,7 @@ class ReachingFranka(gym.Env):
         # init real franka
         print("Connecting to robot at {}...".format(robot_ip))
         self.robot = frankx.Robot(robot_ip)
+        self.gripper = frankx.Gripper(robot_ip)  # this form deepseek who save my life and make gwippa work!
         self.robot.set_default_behavior()
         self.robot.recover_from_errors()
 
@@ -55,11 +53,6 @@ class ReachingFranka(gym.Env):
         self.robot.acceleration_rel = 0.05
         self.robot.jerk_rel = 0.005
         #self.robot.set_dynamic_rel(0.2)
-
-        #print("FIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIISSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSEEEEEEEEEEEEEEEEEEE")
-        #print(gripper_width)
-        #print(gripper_speed)
-        #print("Robot connected")
 
         state = self.robot.read_once()
         #print('\nPose: ', self.robot.current_pose())
@@ -340,11 +333,23 @@ class ReachingFranka(gym.Env):
         #        self._gripper_motion = self.gripper.move_async(0.08)
 
         ##
-        # Control gripper (assuming action[7] is gripper control)
-        
+        def translate(value, leftMin, leftMax, rightMin, rightMax):
+            # Figure out how 'wide' each range is
+            leftSpan = leftMax - leftMin
+            rightSpan = rightMax - rightMin
 
-        gripper_action = (action[7:8]/2)*0.01
-        self.gripper.move(gripper_action) #
+            # Convert the left range into a 0-1 range (float)
+            valueScaled = float(value - leftMin) / float(leftSpan)
+
+            # Convert the 0-1 range into a value in the right range.
+            return rightMin + (valueScaled * rightSpan)
+
+        action[7:8] = translate(action[7:8], 0, 20, 0.00, 0.08)
+        #gripper_action = (action[7:8]*0.01)/2
+        
+        self.gripper.move(action[7:8])
+
+
 ###
 #Start her imorgen. find en komando der sætter dens vle istedet for dens pos fordi detteher er dårligt
 ###
