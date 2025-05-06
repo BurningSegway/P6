@@ -64,6 +64,7 @@ class ReachingFranka(gym.Env):
         self.robot_default_dof_pos = np.radians([0, -45, 0, -135, 0, 90, 45])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
+        self.all_data = [] #TILFØJET AF BENJA
 
         self.progress_buf = 1
         self.obs_buf = np.zeros((18,), dtype=np.float32)
@@ -247,6 +248,18 @@ class ReachingFranka(gym.Env):
         time.sleep(0.1)  # lower frequency, at 30Hz there are discontinuities
 
         observation, reward, done = self._get_observation_reward_done()
+
+
+
+
+        self.all_data.append(observation.copy())# Tilføjet af Benja
+        self.DATA = np.array(self.all_data)# Tilføjet af Benja
+        print(self.DATA.shape)# Tilføjet af Benja
+        np.savetxt(f"DATA_01_-01_002.csv", np.array(self.DATA), delimiter=",")# Tilføjet af Benja
+
+
+
+
 
         if self._drepecated_api:
             return observation, reward, done, {}

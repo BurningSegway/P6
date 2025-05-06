@@ -35,8 +35,8 @@ class ReachingFranka(gym.Env):
 
 
         if self.control_space == "blind_agent": #setting the control space as the blind agents
-            self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32) #setting the action space (7 for joint and 1 for gripper)
-
+            #self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32) #setting the action space (7 for joint and 1 for gripper)
+            self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32)
         else:
             raise ValueError("Invalid control space:", self.control_space)
         
@@ -61,16 +61,15 @@ class ReachingFranka(gym.Env):
         self.motion_thread = None
 
         #setting parameters
-        self.dt = 1 / 100
-        self.action_scale = 1
-        self.dof_vel_scale = 0.1
-        self.max_episode_length = 500
-        self.robot_dof_speed_scales = 1 #This controlls the speed do not put above 0.5
+        self.dt = 1 / 120
+        self.action_scale = 0.5
+        self.dof_vel_scale = 0.01
+        self.max_episode_length = 200
+        self.robot_dof_speed_scales = 0.5 #This controlls the speed do not put above 0.5
         self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
-        self.rock_end_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
+        self.rock_end_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0]) #i know not if number 4 should be 0 or 1, how would i know??!!?
         #self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         #self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
-
         self.progress_buf = 1
         self.obs_buf = np.zeros((36,), dtype=np.float32)
 
@@ -124,12 +123,12 @@ class ReachingFranka(gym.Env):
         gripper_speed = self.gripper.__getattribute__("gripper_speed")
 
         self.joint_pos = np.zeros((9,))
-        self.joint_pos[0:7] = np.array(robot_state.q)#* frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
+        self.joint_pos[0:7] = np.array(robot_state.q)
         self.joint_pos[7:8] = gripper_width/2
         self.joint_pos[8:9] = gripper_width/2
 
         self.joint_vel = np.zeros((9,))
-        self.joint_vel[0:7] = np.array(robot_state.dq)#* frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
+        self.joint_vel[0:7] = np.array(robot_state.dq)
         self.joint_vel[7:8] = gripper_speed
         self.joint_vel[8:9] = gripper_speed
 
@@ -188,7 +187,7 @@ class ReachingFranka(gym.Env):
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
                         #################################################################
-                        self.target_pos = np.array([2.0, 0.0, 0.2]) #!!Where is the rock!!
+                        self.target_pos = np.array([0.5, 0.0, 0.2]) #!!Where is the rock!!
                         #################################################################
                     print("Target position:", self.target_pos)
                     break
@@ -204,7 +203,7 @@ class ReachingFranka(gym.Env):
         #if self.motion_type == "waypoint":
         #    self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=False)
         if self.motion_type == "impedance":
-            self.motion = frankx.ImpedanceMotion(, 0)
+            self.motion = frankx.ImpedanceMotion(500, 0)
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
 
@@ -229,20 +228,19 @@ class ReachingFranka(gym.Env):
         # control space
         
     ###Dof action scaleing to avoid ilegal comands
-        def translate_dof_a_to_c(values, original_min, original_max, pi):
-            left_span = 40
-            right_span = 2 * pi  # New range is [-py, py], so total span is 2*py
+        #def translate_dof_a_to_c(values, original_min, original_max, pi):
+        #    left_span = 40
+        #    right_span = 2 * pi  # New range is [-py, py], so total span is 2*py
     
-            # Clip values to original bounds (optional, but safer)
-            values = np.clip(values, original_min, original_max)
+        #    # Scale to [0, 1] first, then to [-py, py]
+        #    normalized = (values - original_min) / left_span  # [0, 1]
+        #    dof_c = normalized * right_span - pi  # [-py, py]
     
-            # Scale to [0, 1] first, then to [-py, py]
-            normalized = (values - original_min) / left_span  # [0, 1]
-            dof_c = normalized * right_span - pi  # [-py, py]
-    
-            return dof_c
+        #    return dof_c
     ### 
-        scaled_dof = translate_dof_a_to_c(action[0:7], -20, 20, 1)
+        #scaled_dof = translate_dof_a_to_c(action[0:7], -20, 20, 1)
+        #action[0:7] = translate_dof_a_to_c(action[0:7], -20, 20, np.pi)
+        #scaled_dof = (action[0:7])
         # joint
         if self.control_space == "blind_agent":
             # get robot state
@@ -252,11 +250,12 @@ class ReachingFranka(gym.Env):
                 robot_state = self.robot.get_state(read_once=False)
             
             # forward kinematics
-            self.dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * scaled_dof * self.action_scale)
+            dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale)
+            #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * scaled_dof * self.action_scale)
 
-            affine = frankx.Affine(self.robot.forward_kinematics(self.dof_pos))
+            affine = frankx.Affine(self.robot.forward_kinematics(dof_pos))
             
-            affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2) # adds end effector transform so affine base to end effector transform
+            #affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2) # adds end effector transform so affine base to end effector transform
         # impedance motion
         if self.motion_type == "impedance":
             self.motion.target = affine
@@ -295,9 +294,9 @@ class ReachingFranka(gym.Env):
         #gripper_action = (action[7:8]*0.01)/2
         
         #gripper_width = self.gripper.width()
-        gripper_width_target = (translate_a_to_c(action[7:8], 0, 19, 0.00, 0.04/2))
+        gripper_width_target = (translate_a_to_c(action[7:8], 0, 20, 0.00, 0.04/2))
         self.gripper.move_async(gripper_width_target)
-        #print("Gripper width target is:",gripper_width_target)
+        print("Gripper width target is:",gripper_width_target)
 
         # the use of time.sleep is for simplicity. This does not guarantee control at a specific frequency
         time.sleep(0.1)  # lower frequency, at 30Hz there are discontinuities
