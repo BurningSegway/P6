@@ -31,13 +31,13 @@ class ReachingFranka(gym.Env):
 
         # spaces
         if self.control_space == "blind_agent": #setting the control space as the blind agents
-            self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32) #setting the action space (7 for joint and 1 for gripper)
+            self.action_space = gym.spaces.Box(low=-1000, high=1000, shape=(8,), dtype=np.float32) #setting the action space (7 for joint and 1 for gripper)
 
         else:
             raise ValueError("Invalid control space:", self.control_space)
         
 
-        self.observation_space = gym.spaces.Box(low=-1000, high=1000, shape=(36,), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-1000, high=1000, shape=(19,), dtype=np.float32)
         
 
         # init real franka
@@ -74,12 +74,11 @@ class ReachingFranka(gym.Env):
         self.robot_default_gripper_pos = np.array([0.04])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
-        #self.rock_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0])
-        self.rock_target = np.array([-0.7009, 0.9867, -1.6942, 0, 0, 0, 0])
+
         self.all_data = []
 
         self.progress_buf = 1
-        self.obs_buf = np.zeros((36,), dtype=np.float32)
+        self.obs_buf = np.zeros((19,), dtype=np.float32)
 
     def _update_target_from_camera(self):
         pixel_to_meter = 1.11 / 375  # m/px: adjust for custom cases
@@ -127,14 +126,16 @@ class ReachingFranka(gym.Env):
 
         # observations
 
-        #actions in observation
-        self.last_action = np.zeros(8, dtype=np.float32)
-
         #gripper instantiation
         self.gripper = self.robot.get_gripper()
         gripper_width = self.gripper.width()
         gripper_speed = self.gripper.__getattribute__("gripper_speed")
         self.gripper.open()
+
+
+
+
+
 
         #Joint positions in observation
         self.joint_pos = np.zeros((9,))
@@ -143,28 +144,21 @@ class ReachingFranka(gym.Env):
         self.joint_pos[8:9] = gripper_width/2
 
         #Joint velocities in observation
-        self.joint_vel = np.zeros((9,))
+        self.joint_vel = np.zeros((7,))
         self.joint_vel[0:7] = np.array(robot_state.dq)
-        self.joint_vel[7:8] = gripper_speed
-        self.joint_vel[8:9] = gripper_speed
-
-        #Rock position
+        #Object position
         self.object_position = self.target_pos
 
-        #Target position
-        self.target_object_position = self.rock_target
-
         #Observation creation
-        self.obs_buf[0:8] =   self.last_action
-        self.obs_buf[8:17] =  self.joint_pos
-        self.obs_buf[17:26] = self.joint_vel
-        self.obs_buf[26:29] = self.object_position
-        self.obs_buf[29:36] = self.target_object_position 
+        self.obs_buf[0:9] =  self.joint_pos
+        self.obs_buf[9:16] = self.joint_vel
+        self.obs_buf[16:19] = self.object_position
 
 
         # reward
         self.end_effector_pos = np.array(robot_state.O_T_EE[-4:-1])
         distance = np.linalg.norm(self.end_effector_pos - self.target_pos)
+        self.reward = -distance
         reward = -distance
 
         # done
@@ -206,8 +200,48 @@ class ReachingFranka(gym.Env):
                     if raw:
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
-                        self.target_pos = np.array([0.1, -0.1, 0.02])
-                        #self.target_pos = np.array([0.09, -1.33, -1.22])
+                        #self.target_pos = np.array([0.1, -0.1, 0.02])
+                        #self.target_pos = np.array([0.5, 0.5, 0.0]) #Fedt koordinat
+                        #self.target_pos = np.array([0.587, -0.009, 0.0]) #også mega fedt!
+                        self.target_pos = np.array([0.587, -0.5, 0.0]) #også mega fedt!
+
+
+                        #test 1
+                        #self.target_pos = np.array([0.43, 0.09, 0.21])
+                        #self.target_pos = np.array([0.55, -0.2, 0.23])
+                        #self.target_pos = np.array([0.6, 0.07, 0.27])
+                        #self.target_pos = np.array([0.54, 0.2, 0.3])
+                        #self.target_pos = np.array([0.59, 0.05, 0.23])
+                        #self.target_pos = np.array([0.4,  -0.21, 0.3])
+
+
+
+
+                        #test 2
+                        #self.target_pos = np.array([0.59, -0.47, 0.3])
+                        #self.target_pos = np.array([0.14, 0.5, 0.3])
+                        #self.target_pos = np.array([0.46, 0.2, 0.3])
+                        #self.target_pos = np.array([0.12, -0.54, 0.3])
+                        #self.target_pos = np.array([0.43, 0.44, 0.3])
+
+                        #test 3
+                        #self.target_pos = np.array([-0.7047, -0.8319, -1.7732])
+                        #self.target_pos = np.array([0.7, -0.7, 0.06])
+                        #self.target_pos = np.array([-0.7, 0.7, 0.06])
+                        #self.target_pos = np.array([-0.7, -0.7, 0.06])
+                        
+                        #self.target_pos = np.array([-1, 1, 0])
+                        #self.target_pos = np.array([0.7, 0.7, 0.3])
+                        #self.target_pos = np.array([0.7, -0.7, 0.3])
+                        #self.target_pos = np.array([-0.7, 0.7, 0.3])
+                        #self.target_pos = np.array([-0.7, -0.7, 0.3])
+
+                        #self.target_pos = np.array([0.7, 0, 0.06])
+                        #self.target_pos = np.array([0, -0.7, 0.06])
+                        #self.target_pos = np.array([0, 0.7, 0.06])
+                        #self.target_pos = np.array([-0.7, 0, 0.06])
+
+
                     print("Target position:", self.target_pos)
                     break
                 except ValueError:
@@ -238,6 +272,7 @@ class ReachingFranka(gym.Env):
             return observation
         else:
             return observation, {}
+
 
     def step(self, action):
         self.last_action = action
@@ -300,28 +335,30 @@ class ReachingFranka(gym.Env):
         print("action is: ", action)
         print("Affine is: ", affine)
         print("EE pose is: ", self.end_effector_pos)
-        obs_array_type = ["joint action", "gripper close width", "joint position", "gripper position", "joint velocity", "gripper velocity", "stone x", "stone y", "stone z", "Target x", "Target y", "Target z", "Target quat"]
-        print("oberservations is: ")
+        obs_array_type = ["joint_pose", "gripper_pose", "joint_vel", "object_pose"]
         for i in range(len(observation)):
             if i<=6: print(obs_array_type[0], i+1, "is: ", observation[i])
-            if 6<i<8: print(obs_array_type[1], "is: ", observation[i])
-            if 7<i<=14: print(obs_array_type[2], i-7, "is: ", observation[i])
-            if 14<i<=16: print(obs_array_type[3], i-14, "is: ", observation[i])
-            if 16<i<=23: print(obs_array_type[4], i-16, "is: ", observation[i])
-            if 23<i<=25: print(obs_array_type[5], i-23, "is: ", observation[i])
-            if 25<i<=28: print(obs_array_type[5+i-25], "is: ", observation[i])
-            if 28<i<=31: print(obs_array_type[8+i-28], "is: ", observation[i])
-            if 31<i<=35: print(obs_array_type[12], i-31, "is: ", observation[i])
+            if 6<i<=8: print(obs_array_type[1], i+7, "is: ", observation[i])
+            if 8<i<=15: print(obs_array_type[2], "is: ", observation[i])
+            if 15<i<19: print(obs_array_type[2], "is: ", observation[i])
+
+        hodor = []
+
+        for i in range(len(observation)):
+            hodor.append(observation[i])
+        for i in range(len(self.last_action)):
+            hodor.append(self.last_action[i])
+        hodor.append(self.reward)
+        
 
 
+        #hodor.append(observation.copy() + self.last_action.copy() +self.reward.copy())
 
 
-        self.all_data.append(observation.copy())
-        self.DATA = np.array(self.all_data)
-        print(self.DATA.shape)
-        np.savetxt(f"DATA_alabenja_01_-01_002.csv", np.array(self.DATA), delimiter=",")
-
-
+        #self.all_data.append(observation.copy() + self.last_action + self.reward)
+        self.all_data.append(hodor)
+        DATA = np.array(self.all_data)
+        np.savetxt(f"test.csv", np.array(DATA), delimiter=",")
 
 
         if self._drepecated_api:
