@@ -46,7 +46,6 @@ class Shared(GaussianMixin, DeterministicMixin, Model):
 
     def act(self, inputs, role):
         #print("Inputs")
-        print(inputs["states"])
         if role == "policy":
             return GaussianMixin.act(self, inputs, role)
         elif role == "value":

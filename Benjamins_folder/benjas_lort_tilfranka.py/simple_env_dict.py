@@ -48,6 +48,7 @@ class ReachingFranka(gym.Env):
         # init real franka
         print("Connecting to robot at {}...".format(robot_ip))
         self.robot = frankx.Robot(robot_ip)
+        self.gripper = frankx.Gripper(robot_ip)  # gwippa init
         self.robot.set_default_behavior()
         self.robot.recover_from_errors()
 
@@ -130,15 +131,17 @@ class ReachingFranka(gym.Env):
             robot_state = self.robot.get_state(read_once=False)
 
         # observations
-        self.gripper = self.robot.get_gripper()
+        #self.gripper = self.robot.get_gripper()
+        #gripper_width = self.gripper.width()
+        #self.gripper.open()
+        
         gripper_width = self.gripper.width()
-        self.gripper.open()
-
         # Joint positions in observation
         joint_pos = np.zeros((9,), dtype=np.float32)
         joint_pos[0:7] = np.array(robot_state.q)
-        joint_pos[7:8] = gripper_width/2
-        joint_pos[8:9] = gripper_width/2
+        print(joint_pos[0:7])
+        joint_pos[7:8] = gripper_width
+        joint_pos[8:9] = gripper_width
 
         # Joint velocities in observation
         joint_vel = np.zeros((7,), dtype=np.float32)
@@ -187,12 +190,11 @@ class ReachingFranka(gym.Env):
         # open/close gripper
         #self.gripper.open()
         # self.gripper.clamp()
-
+        self.gripper.move_async(0.08)
         # go to 1) safe position, 2) random position
         self.robot.move(frankx.JointMotion(self.robot_default_dof_pos.tolist()))
         dof_pos = self.robot_default_dof_pos # + 0.25 * (np.random.rand(7) - 0.5) #start position offset
         self.robot.move(frankx.JointMotion(dof_pos.tolist()))
-        #self.gripper.move(0.04)
         # get target position from prompt
         if not self.camera_tracking:
             while True:
@@ -203,18 +205,18 @@ class ReachingFranka(gym.Env):
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
                         #self.target_pos = np.array([0.1, -0.1, 0.02])
-                        #self.target_pos = np.array([0.5, 0.5, 0.0]) #Fedt koordinat
+                        self.target_pos = np.array([0.5, 0.5, 0.0]) #Fedt koordinat
                         #self.target_pos = np.array([0.587, -0.009, 0.0]) #også mega fedt!
                         #self.target_pos = np.array([0.587, -0.5, 0.0]) #også mega fedt!
 
 
                         #test 1
-                        self.target_pos = np.array([0.9, 0.09, 0])
-                        #self.target_pos = np.array([0.55, -0.2, 0.23])
+                        #self.target_pos = np.array([0.9, 0.09, 0])
+                        #self.target_pos = np.array([0.55, -0.1, 0.01])
                         #self.target_pos = np.array([0.6, 0.07, 0.27])
                         #self.target_pos = np.array([0.54, 0.2, 0.3])
                         #self.target_pos = np.array([0.59, 0.05, 0.23])
-                        #self.target_pos = np.array([0.4,  -0.21, 0.3])
+                        #self.target_pos = np.array([0.6,  -0.21, 0.0])
 
 
 
@@ -234,7 +236,7 @@ class ReachingFranka(gym.Env):
                         
                         #self.target_pos = np.array([-1, 1, 0])
                         #self.target_pos = np.array([0.7, 0.7, 0.3])
-                        #self.target_pos = np.array([0.7, -0.7, 0.3])
+                        #self.target_pos = np.array([0.7, -0.7, 0.0])
                         #self.target_pos = np.array([-0.7, 0.7, 0.3])
                         #self.target_pos = np.array([-0.7, -0.7, 0.3])
 
@@ -292,7 +294,7 @@ class ReachingFranka(gym.Env):
 
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale) # fikser at der ikke er gripper med i øjeblikket... måske
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action * self.action_scale)
-            dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale)
+            dof_pos = action[0:7]
             print(dof_pos)
             print(dof_pos.shape)
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
@@ -330,10 +332,7 @@ class ReachingFranka(gym.Env):
             self.motion.target = affine
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
-
-        ###################
-        #tyv stjålet
-        #Gripper action goes here
+       #Gripper action goes here
         #This code makes the gripper action executeble (maps from 20 :  to 0.08 : 0)
         def translate_a_to_c(value, leftMin, leftMax, rightMin, rightMax):
             # Figure out how 'wide' each range is
@@ -346,27 +345,11 @@ class ReachingFranka(gym.Env):
 
             # Convert the 0-1 range into a value in the right range.
             return rightMin + (valueScaled * rightSpan)
-
-        #def translate_c_to_a(value, rightMin, rightMax, leftMin, leftMax):
-        #    # Figure out how 'wide' each range is
-        #    leftSpan = leftMax - leftMin
-        #    rightSpan = rightMax - rightMin
-        #
-        #    # Convert the left range into a 0-1 range (float)
-        #    valueScaled = float(value - rightMin) / float(rightSpan)
-        #
-        #    # Convert the 0-1 range into a value in the right range.
-        #    return leftMin + (valueScaled * leftSpan)
-
-        #gripper_action = (action[7:8]*0.01)/2
         
-        #gripper_width = self.gripper.width()
-        ##gripper_width_target = (translate_a_to_c(action[7:8], 0, 20, 0.00, 0.04/2))
-        ##self.gripper.move_async(gripper_width_target)
-        ##print("Gripper width target is:",gripper_width_target)
-
-
-
+        gripper_width_target = (translate_a_to_c(action[7:8], -2, 2, 0.00, 0.08))
+        self.gripper.move_async(gripper_width_target)
+        print("Gripper width target is:", gripper_width_target)
+        #self.gripper.move_async(action[7:8])
 
         ###################
         # the use of time.sleep is for simplicity. This does not guarantee control at a specific frequency
@@ -393,8 +376,10 @@ class ReachingFranka(gym.Env):
         
         # Add observation components
         data_row.extend(observation["joint_pos"].tolist())      # 9 values
+        print(observation["joint_pos"])
         data_row.extend(observation["joint_vel"].tolist())      # 7 values
         data_row.extend(observation["object_position"].tolist()) # 3 values
+        data_row.extend(dof_pos[:].tolist())
         
         # Add action and reward
         data_row.extend(self.last_action)  # Assuming last_action is a numpy array

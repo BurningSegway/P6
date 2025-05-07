@@ -64,7 +64,7 @@ class ReachingFranka(gym.Env):
         self.action_scale = 2.5
         self.dof_vel_scale = 0.1
         self.max_episode_length = 200
-        self.robot_dof_speed_scales = 0.5 #This controlls the speed do not put above 0.5
+        self.robot_dof_speed_scales = 1 #This controlls the speed do not put above 0.5
         self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
@@ -189,13 +189,13 @@ class ReachingFranka(gym.Env):
         # initial pose
         affine = frankx.Affine(frankx.Kinematics.forward(self.robot_default_dof_pos.tolist()))
 
-        affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
+        #affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
 
         # motion type
         #if self.motion_type == "waypoint":
         #    self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=False)
         if self.motion_type == "impedance":
-            self.motion = frankx.ImpedanceMotion(500, 0)
+            self.motion = frankx.ImpedanceMotion(500, 50)
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
 
@@ -229,7 +229,7 @@ class ReachingFranka(gym.Env):
     
             return dof_c
     ### 
-        scaled_dof = translate_dof_a_to_c(action[0:7], -20, 20, np.pi)
+        #scaled_dof = translate_dof_a_to_c(action[0:7], -20, 20, np.pi)
         #action[0:7] = translate_dof_a_to_c(action[0:7], -20, 20, np.pi)
         #scaled_dof = (action[0:7])
         # joint
@@ -241,7 +241,8 @@ class ReachingFranka(gym.Env):
                 robot_state = self.robot.get_state(read_once=False)
             
             # forward kinematics
-            dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale)
+            dof_pos = action[0:7]
+            #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale)
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * scaled_dof * self.action_scale)
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * scaled_dof * self.action_scale)
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))

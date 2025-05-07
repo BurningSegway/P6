@@ -65,13 +65,14 @@ def plot_simple():
         [f"joint_pose_{i}" for i in range(7)] +
         [f"gripper_pose_1", "gripper_pose_2"] +
         [f"joint_vel_{i}" for i in range(7)] +
-        ["obj_x", "obj_y", "obj_z"] + 
+        ["obj_x", "obj_y", "obj_z"] +
+        [f"dof_pose{i}" for i in range(7)] + 
         [f"action_{i}" for i in range(8)] +
         ["distance"]
     )
 
 
-    colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'w']
+    colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'b']
     df = pd.read_csv("test.csv", header=None, names=column_names)
     
     # Set up the plot figure
@@ -82,11 +83,14 @@ def plot_simple():
 
     # Plot joint velocities on the right y-axis (ax2)
     for i in range(0,4):
-        ax2.plot(df[f'joint_vel_{i}'], label=f'Joint {i} velocity', color=colors[i], linewidth=2)
+        #ax2.plot(df[f'joint_vel_{i}'], label=f'Joint {i} velocity', color=colors[i], linewidth=2)
+        #ax2.plot(df[f'joint_pose_{i}'], label=f'Joint {i} velocity', color=colors[i], linewidth=2)
+        ax2.plot(df[f'dof_pose{i}'], label=f'dof pose {i} ', color=colors[i], linewidth=2)
     
     # Plot actions and distance on the left y-axis (ax1)
     for i in range(0,4):
-        ax1.plot(df[f'action_{i}'], label=f'action {i}', color=colors[i], linestyle='--', linewidth=2)
+        #ax1.plot(df[f'action_{i}'], label=f'action {i}', color=colors[i], linestyle='--', linewidth=2)
+        ax1.plot(df[f'joint_pose_{i}'], label=f'Joint {i} position', color=colors[i],linestyle='--', linewidth=2)
     ax1.plot(df[f'distance'], label=f'distance', linewidth=2, linestyle=':', color='blue')
 
     #ax2.set_ylim([-3.0, 3.0])
@@ -115,11 +119,14 @@ def plot_simple():
 
     # Plot joint velocities on the right y-axis (ax2)
     for i in range(4,7):
-        ax2.plot(df[f'joint_vel_{i}'], label=f'Joint {i} velocity', color=colors[i], linewidth=2)
+        #ax2.plot(df[f'joint_vel_{i}'], label=f'Joint {i} velocity', color=colors[i], linewidth=2)
+        #ax2.plot(df[f'joint_pose_{i}'], label=f'Joint {i} velocity', color=colors[i], linewidth=2)
+        ax2.plot(df[f'dof_pose{i}'], label=f'dof pose {i} ', color=colors[i], linewidth=2)
     
     # Plot actions and distance on the left y-axis (ax1)
     for i in range(4,7):
-        ax1.plot(df[f'action_{i}'], label=f'action {i}', color=colors[i], linestyle='--', linewidth=2)
+        #ax1.plot(df[f'action_{i}'], label=f'action {i}', color=colors[i], linestyle='--', linewidth=2)
+        ax1.plot(df[f'joint_pose_{i}'], label=f'Joint {i} position', color=colors[i], linestyle='--', linewidth=2)
     ax1.plot(df[f'distance'], label=f'distance', linewidth=2, linestyle=':', color='blue')
 
 
