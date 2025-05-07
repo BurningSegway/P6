@@ -46,7 +46,7 @@ class Shared(GaussianMixin, DeterministicMixin, Model):
 
     def act(self, inputs, role):
         #print("Inputs")
-        #print(inputs)
+        print(inputs["states"])
         if role == "policy":
             return GaussianMixin.act(self, inputs, role)
         elif role == "value":
@@ -63,11 +63,10 @@ class Shared(GaussianMixin, DeterministicMixin, Model):
             return self.value_layer(shared_output), {}
 
 
-# Load the environment benja's eller mortens
-from reaching_franka_real_env_alamort import ReachingFranka
-#from reaching_franka_real_env_alabenja import ReachingFranka
+# Load the environment (env file)
+from reaching_franka_real_env_alamort_simp import ReachingFranka
 
-control_space = "blind_agent"   # blind_agent
+control_space = "joint"   # cartesian or joint
 motion_type = "impedance"  # waypoint or impedance
 camera_tracking = False   # True for USB-camera tracking
 
@@ -127,8 +126,8 @@ cfg["experiment"]["wandb"] = False                   #aktivere wandb
 cfg["experiment"]["wandb_kwargs"] ={                #Ting der bliver givet til wandb init, meget smart gutter
     "entity": "urkanin-aalborg-universitet",        #Hvilken konto/teams det skal gemmes på, det her er vores fælles
     "project": "P6",                                #Hvilket projekt inde på teams det skal gemmes på
-    "group": "Franka-Lift-PPO-Final-Variance-Test",                     #Man kan gruppere sine runs, smart hvis man tester forksellige ting af, og skal have et samlet overblik over netop dem
-    "job_type": "train"                             #Synes vi skal have den her til train/eval, så kan man nemt skelne
+    "group": "Real_life_franka",                     #Man kan gruppere sine runs, smart hvis man tester forksellige ting af, og skal have et samlet overblik over netop dem
+    "job_type": "Real_life_tests_with_franka"                             #Synes vi skal have den her til train/eval, så kan man nemt skelne
 } 
 
 agent = PPO(models=models,
@@ -139,11 +138,10 @@ agent = PPO(models=models,
             device=device)
 
 
-
 # load checkpoints
 
-if control_space == "blind_agent":
-    agent.load("Benjamins_folder/benjas_lort_tilfranka.py/best_agent.pt")
+if control_space == "joint":
+    agent.load("morten_tester_frank/best_agent_simple.pt")
 else:
     print("wrong controll space")
 # Configure and instantiate the RL trainer

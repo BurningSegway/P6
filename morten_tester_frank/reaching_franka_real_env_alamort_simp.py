@@ -8,7 +8,7 @@ import frankx
 
 
 class ReachingFranka(gym.Env):
-    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="blind_agent", motion_type="impedance", camera_tracking=False):
+    def __init__(self, robot_ip="172.16.0.2", device="cuda:0", control_space="joint", motion_type="impedance", camera_tracking=False):
         # gym API
         self._drepecated_api = version.parse(gym.__version__) < version.parse(" 0.25.0")
 
@@ -29,12 +29,11 @@ class ReachingFranka(gym.Env):
             threading.Thread(target=self._update_target_from_camera).start()
 
         # spaces
-        self.observation_space = gym.spaces.Box(low=-1000, high=1000, shape=(36,), dtype=np.float32)
-        self.last_action = np.zeros(8, dtype=np.float32)
-        self.rock_target = np.zeros(7, dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-1000, high=1000, shape=(19,), dtype=np.float32)
 
 
-        if self.control_space == "blind_agent": #setting the control space as the blind agents
+
+        if self.control_space == "joint": #setting the control space as the blind agents
             #self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32) #setting the action space (7 for joint and 1 for gripper)
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32)
         else:
@@ -62,16 +61,15 @@ class ReachingFranka(gym.Env):
 
         #setting parameters
         self.dt = 1 / 120
-        self.action_scale = 0.5
-        self.dof_vel_scale = 0.01
+        self.action_scale = 2.5
+        self.dof_vel_scale = 0.1
         self.max_episode_length = 200
         self.robot_dof_speed_scales = 0.5 #This controlls the speed do not put above 0.5
         self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
-        self.rock_end_target = np.array([0.5, 0, 0.3, 1, 0, 0, 0]) #i know not if number 4 should be 0 or 1, how would i know??!!?
-        #self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
-        #self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
+        self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
+        self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
         self.progress_buf = 1
-        self.obs_buf = np.zeros((36,), dtype=np.float32)
+        self.obs_buf = np.zeros((19,), dtype=np.float32)
 
 
     def _update_target_from_camera(self):
@@ -120,26 +118,20 @@ class ReachingFranka(gym.Env):
 
         #self.gripper = self.robot.get_gripper()
         gripper_width = self.gripper.width()
-        gripper_speed = self.gripper.__getattribute__("gripper_speed")
 
         self.joint_pos = np.zeros((9,))
         self.joint_pos[0:7] = np.array(robot_state.q)
         self.joint_pos[7:8] = gripper_width/2
         self.joint_pos[8:9] = gripper_width/2
 
-        self.joint_vel = np.zeros((9,))
+        self.joint_vel = np.zeros((7,))
         self.joint_vel[0:7] = np.array(robot_state.dq)
-        self.joint_vel[7:8] = gripper_speed
-        self.joint_vel[8:9] = gripper_speed
 
         self.object_position = self.target_pos
-        self.target_object_position = self.rock_end_target
-
-        self.obs_buf[0:8] =   self.last_action
-        self.obs_buf[8:17] =  self.joint_pos
-        self.obs_buf[17:26] = self.joint_vel
-        self.obs_buf[26:29] = self.object_position
-        self.obs_buf[29:36] = self.target_object_position # der er måske ikke en 36'th plads da den er 36 lang men har 0 med? så prøv at skriv 35 ??
+   
+        self.obs_buf[0:9] =  self.joint_pos
+        self.obs_buf[9:16] = self.joint_vel
+        self.obs_buf[16:19] = self.object_position
 
         # get robot state
 
@@ -171,7 +163,7 @@ class ReachingFranka(gym.Env):
         self.motion_thread = None
         
 
-        self.gripper.move_async(0.07)
+        self.gripper.move_async(0.08)
 
         # go to 1) safe position, 2) random position
         self.robot.move(frankx.JointMotion(self.robot_default_dof_pos.tolist()))
@@ -187,7 +179,7 @@ class ReachingFranka(gym.Env):
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
                         #################################################################
-                        self.target_pos = np.array([0.5, 0.0, 0.2]) #!!Where is the rock!!
+                        self.target_pos = np.array([0.6, 0.0, 0.0]) #!!Where is the rock!!
                         #################################################################
                     print("Target position:", self.target_pos)
                     break
@@ -222,27 +214,26 @@ class ReachingFranka(gym.Env):
             return observation, {}
     
     def step(self, action):
-        self.rock_target = self.rock_end_target
-        
+
         self.progress_buf += 1
         # control space
         
     ###Dof action scaleing to avoid ilegal comands
-        #def translate_dof_a_to_c(values, original_min, original_max, pi):
-        #    left_span = 40
-        #    right_span = 2 * pi  # New range is [-py, py], so total span is 2*py
+        def translate_dof_a_to_c(values, original_min, original_max, pi):
+            left_span = 40
+            right_span = 2 * pi  # New range is [-py, py], so total span is 2*py
     
-        #    # Scale to [0, 1] first, then to [-py, py]
-        #    normalized = (values - original_min) / left_span  # [0, 1]
-        #    dof_c = normalized * right_span - pi  # [-py, py]
+            # Scale to [0, 1] first, then to [-py, py]
+            normalized = (values - original_min) / left_span  # [0, 1]
+            dof_c = normalized * right_span - pi  # [-py, py]
     
-        #    return dof_c
+            return dof_c
     ### 
-        #scaled_dof = translate_dof_a_to_c(action[0:7], -20, 20, 1)
+        scaled_dof = translate_dof_a_to_c(action[0:7], -20, 20, np.pi)
         #action[0:7] = translate_dof_a_to_c(action[0:7], -20, 20, np.pi)
         #scaled_dof = (action[0:7])
         # joint
-        if self.control_space == "blind_agent":
+        if self.control_space == "joint":
             # get robot state
             try:
                 robot_state = self.robot.get_state(read_once=True)
@@ -252,13 +243,14 @@ class ReachingFranka(gym.Env):
             # forward kinematics
             dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale)
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * scaled_dof * self.action_scale)
-
-            affine = frankx.Affine(self.robot.forward_kinematics(dof_pos))
+            #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * scaled_dof * self.action_scale)
+            affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
             
-            #affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2) # adds end effector transform so affine base to end effector transform
+            affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2) # adds end effector transform so affine base to end effector transform
         # impedance motion
         if self.motion_type == "impedance":
             self.motion.target = affine
+            print("this is motion.target:",self.motion.target)
         
 
         else:
@@ -294,7 +286,7 @@ class ReachingFranka(gym.Env):
         #gripper_action = (action[7:8]*0.01)/2
         
         #gripper_width = self.gripper.width()
-        gripper_width_target = (translate_a_to_c(action[7:8], 0, 20, 0.00, 0.04/2))
+        gripper_width_target = (translate_a_to_c(action[7:8], -20, 20, 0.00, 0.08))
         self.gripper.move_async(gripper_width_target)
         print("Gripper width target is:",gripper_width_target)
 
@@ -302,22 +294,17 @@ class ReachingFranka(gym.Env):
         time.sleep(0.1)  # lower frequency, at 30Hz there are discontinuities
 
         observation, reward, done = self._get_observation_reward_done()
-
-        obs_array_type = ["joint action", "gripper close width", "joint position", "gripper position", "joint velocity", "gripper velocity", "stone x", "stone y", "stone z", "Target x", "Target y", "Target z", "Target quat"]
-        print("oberservations is: ")
+        
+        print("DEBUGGING")
+        print("action is: ", action)
+        print("Affine is: ", affine)
+        obs_array_type = ["joint_pose", "gripper_pose", "joint_vel", "object_pose"]
         for i in range(len(observation)):
             if i<=6: print(obs_array_type[0], i+1, "is: ", observation[i])
-            if 6<i<8: print(obs_array_type[1], "is: ", observation[i])
-            if 7<i<=14: print(obs_array_type[2], i-7, "is: ", observation[i])
-            if 14<i<=16: print(obs_array_type[3], i-14, "is: ", observation[i])
-            if 16<i<=23: print(obs_array_type[4], i-16, "is: ", observation[i])
-            if 23<i<=25: print(obs_array_type[5], i-23, "is: ", observation[i])
-            if 25<i<=28: print(obs_array_type[5+i-25], "is: ", observation[i])
-            if 28<i<=31: print(obs_array_type[8+i-28], "is: ", observation[i])
-            if 31<i<=35: print(obs_array_type[12], i-31, "is: ", observation[i])
-        print(gripper_width_target)
+            if 6<i<=8: print(obs_array_type[1], i+7, "is: ", observation[i])
+            if 8<i<=15: print(obs_array_type[2], "is: ", observation[i])
+            if 15<i<19: print(obs_array_type[2], "is: ", observation[i])
 
-        self.last_action = action
         if self._drepecated_api:
             return observation, reward, done, {}
         else:
