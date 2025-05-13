@@ -63,10 +63,10 @@ class Shared(GaussianMixin, DeterministicMixin, Model):
 
 
 # Load the environment (env file)
-from reaching_franka_real_env_alamort_simp import ReachingFranka
+from reaching_franka_real_env_alamort_simp_trying_out_moves import ReachingFranka
 
 control_space = "joint"   # cartesian or joint
-motion_type = "impedance"  # waypoint or impedance
+motion_type = "waypoint"  # waypoint or impedance
 camera_tracking = False   # True for USB-camera tracking
 
 env = ReachingFranka(robot_ip="192.168.2.30",

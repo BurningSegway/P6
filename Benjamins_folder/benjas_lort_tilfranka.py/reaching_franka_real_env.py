@@ -255,9 +255,10 @@ class ReachingFranka(gym.Env):
 
 
         self.all_data.append(observation.copy())# Tilføjet af Benja
+        self.all_data.extend(dof_pos[:].tolist())
         self.DATA = np.array(self.all_data)# Tilføjet af Benja
         print(self.DATA.shape)# Tilføjet af Benja
-        np.savetxt(f"DATA_01_-01_002.csv", np.array(self.DATA), delimiter=",")# Tilføjet af Benja
+        np.savetxt(f"test.csv", np.array(self.DATA), delimiter=",")# Tilføjet af Benja
 
 
 

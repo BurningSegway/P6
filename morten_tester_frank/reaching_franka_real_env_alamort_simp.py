@@ -65,7 +65,8 @@ class ReachingFranka(gym.Env):
         self.dof_vel_scale = 0.1
         self.max_episode_length = 200
         self.robot_dof_speed_scales = 1 #This controlls the speed do not put above 0.5
-        self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
+        #self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
+        self.robot_default_dof_pos = np.radians([0, -45, 0, -135, 0, 90, 45])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
         self.progress_buf = 1
@@ -167,6 +168,8 @@ class ReachingFranka(gym.Env):
 
         # go to 1) safe position, 2) random position
         self.robot.move(frankx.JointMotion(self.robot_default_dof_pos.tolist()))
+        dof_pos = self.robot_default_dof_pos # + 0.25 * (np.random.rand(7) - 0.5) #start position offset
+        self.robot.move(frankx.JointMotion(dof_pos.tolist()))
 
 
         # get target position from prompt
@@ -179,22 +182,79 @@ class ReachingFranka(gym.Env):
                         self.target_pos = np.array([float(p) for p in raw.replace(' ', '').split(',')])
                     else:
                         #################################################################
-                        self.target_pos = np.array([0.6, 0.0, 0.0]) #!!Where is the rock!!
+                        #self.target_pos = np.array([0.6, 0.0, 0.0]) #!!Where is the rock!!
                         #################################################################
+
+                        #Række 1
+                        self.target_pos = np.array([0.65, 0.34, 0.0])
+                        #self.target_pos = np.array([0.65, 0.17, 0.0])
+                        #self.target_pos = np.array([0.65, 0.0, 0.0])
+                        #self.target_pos = np.array([0.65, -0.17, 0.0])
+                        #self.target_pos = np.array([0.65, -0.34, 0.0])
+                        #Række 2
+                        #self.target_pos = np.array([0.51, 0.34, 0.0])
+                        #self.target_pos = np.array([0.51, 0.17, 0.0])
+                        #self.target_pos = np.array([0.51, 0.0, 0.0])
+                        #self.target_pos = np.array([0.51, -0.17, 0.0])
+                        #self.target_pos = np.array([0.51, -0.34, 0.0])
+                        #Række 3
+                        #self.target_pos = np.array([0.35, 0.34, 0.0])
+                        #self.target_pos = np.array([0.35, 0.17, 0.0])
+                        #self.target_pos = np.array([0.35, 0.0, 0.0])
+                        #self.target_pos = np.array([0.35, -0.17, 0.0])
+                        #self.target_pos = np.array([0.35, -0.34, 0.0])
+                        #Række 4
+                        #self.target_pos = np.array([0.24, 0.34, 0.0])
+                        #self.target_pos = np.array([0.24, 0.17, 0.0])
+                        #self.target_pos = np.array([0.24, -0.17, 0.0])
+                        #self.target_pos = np.array([0.24, -0.34, 0.0])
+                        #Række 5
+                        #self.target_pos = np.array([0.1, 0.34, 0.0])
+                        #self.target_pos = np.array([0.1, -0.34, 0.0])
+
+
+
+
+
+
+                        #Within area
+                        #Række 1
+                        #self.target_pos = np.array([0.6, 0.25, 0.0])
+                        #self.target_pos = np.array([0.6, 0.08, 0.0])
+                        #self.target_pos = np.array([0.6, -0.08, 0.0])
+                        #self.target_pos = np.array([0.6, -0.25, 0.0])
+                        #Række 2
+                        #self.target_pos = np.array([0.53, 0.25, 0.0])
+                        #self.target_pos = np.array([0.53, 0.08, 0.0])
+                        #self.target_pos = np.array([0.53, -0.08, 0.0])
+                        #self.target_pos = np.array([0.53, -0.25, 0.0])
+                        #Række 3
+                        #self.target_pos = np.array([0.46, 0.25, 0.0])
+                        #self.target_pos = np.array([0.46, 0.08, 0.0])
+                        #self.target_pos = np.array([0.46, -0.08, 0.0])
+                        #self.target_pos = np.array([0.46, -0.25, 0.0])
+                        #Række 4
+                        #self.target_pos = np.array([0.4, 0.25, 0.0])
+                        #self.target_pos = np.array([0.4, 0.08, 0.0])
+                        #self.target_pos = np.array([0.4, -0.08, 0.0])
+                        #self.target_pos = np.array([0.4, -0.25, 0.0])
+
+                        #Tilfældige
+
+
                     print("Target position:", self.target_pos)
                     break
                 except ValueError:
                     print("Invalid input.")
 
-        # initial pose
-        affine = frankx.Affine(frankx.Kinematics.forward(self.robot_default_dof_pos.tolist()))
-
-        #affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
-
+        # initial pose with gripper
+        affine = frankx.Affine(frankx.Kinematics.forward(dof_pos.tolist()))
+        affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
+        
         # motion type
-        #if self.motion_type == "waypoint":
-        #    self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=False)
-        if self.motion_type == "impedance":
+        if self.motion_type == "waypoint":
+            self.motion = frankx.WaypointMotion([frankx.Waypoint(affine)], return_when_finished=False)
+        elif self.motion_type == "impedance":
             self.motion = frankx.ImpedanceMotion(500, 50)
         else:
             raise ValueError("Invalid motion type:", self.motion_type)
@@ -241,21 +301,14 @@ class ReachingFranka(gym.Env):
                 robot_state = self.robot.get_state(read_once=False)
             
             # forward kinematics
-            dof_pos = action[0:7]
-            #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale)
-            #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * scaled_dof * self.action_scale)
+            dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale)
             #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * scaled_dof * self.action_scale)
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
             
             affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2) # adds end effector transform so affine base to end effector transform
-        # impedance motion
-        if self.motion_type == "impedance":
-            self.motion.target = affine
-            print("this is motion.target:",self.motion.target)
         
 
-        else:
-            raise ValueError("Invalid motion type:", self.motion_type)
+        # impedance motion
         ###
                     #self.gripper.move_async(action[7:8])#gripper comand here?
         
@@ -287,24 +340,24 @@ class ReachingFranka(gym.Env):
         #gripper_action = (action[7:8]*0.01)/2
         
         #gripper_width = self.gripper.width()
-        gripper_width_target = (translate_a_to_c(action[7:8], -20, 20, 0.00, 0.08))
-        self.gripper.move_async(gripper_width_target)
-        print("Gripper width target is:",gripper_width_target)
+        #gripper_width_target = (translate_a_to_c(action[7:8], -10, 10, 0.00, 0.08))
+        #self.gripper.move_async(gripper_width_target)
+        #print("Gripper width target is:",gripper_width_target)
 
         # the use of time.sleep is for simplicity. This does not guarantee control at a specific frequency
         time.sleep(0.1)  # lower frequency, at 30Hz there are discontinuities
 
         observation, reward, done = self._get_observation_reward_done()
         
-        print("DEBUGGING")
-        print("action is: ", action)
-        print("Affine is: ", affine)
-        obs_array_type = ["joint_pose", "gripper_pose", "joint_vel", "object_pose"]
-        for i in range(len(observation)):
-            if i<=6: print(obs_array_type[0], i+1, "is: ", observation[i])
-            if 6<i<=8: print(obs_array_type[1], i+7, "is: ", observation[i])
-            if 8<i<=15: print(obs_array_type[2], "is: ", observation[i])
-            if 15<i<19: print(obs_array_type[2], "is: ", observation[i])
+        #print("DEBUGGING")
+        #print("action is: ", action)
+        #print("Affine is: ", affine)
+        #obs_array_type = ["joint_pose", "gripper_pose", "joint_vel", "object_pose"]
+        #for i in range(len(observation)):
+        #    if i<=6: print(obs_array_type[0], i+1, "is: ", observation[i])
+        #    if 6<i<=8: print(obs_array_type[1], i+7, "is: ", observation[i])
+        #    if 8<i<=15: print(obs_array_type[2], "is: ", observation[i])
+        #    if 15<i<19: print(obs_array_type[2], "is: ", observation[i])
 
         if self._drepecated_api:
             return observation, reward, done, {}

@@ -126,7 +126,7 @@ class ReachingFranka(gym.Env):
             robot_state = self.robot.get_state(read_once=False)
 
         # observations
-
+    
         #gripper instantiation
         self.gripper = self.robot.get_gripper()
         gripper_width = self.gripper.width()
@@ -204,43 +204,64 @@ class ReachingFranka(gym.Env):
                         #self.target_pos = np.array([0.1, -0.1, 0.02])
                         #self.target_pos = np.array([0.5, 0.5, 0.0]) #Fedt koordinat
                         #self.target_pos = np.array([0.587, -0.009, 0.0]) #også mega fedt!
-                        self.target_pos = np.array([0.5, -0.1, 0.01]) #også mega fedt!
+                        #self.target_pos = np.array([0.5, -0.1, 0.01]) #også mega fedt!
+                        #########################
+                        #Række 1
+                        self.target_pos = np.array([0.65, 0.34, 0.0])
+                        #self.target_pos = np.array([0.65, 0.17, 0.0])
+                        #self.target_pos = np.array([0.65, 0.0, 0.0])
+                        #self.target_pos = np.array([0.65, -0.17, 0.0])
+                        #self.target_pos = np.array([0.65, -0.34, 0.0])
+                        #Række 2
+                        #self.target_pos = np.array([0.51, 0.34, 0.0])
+                        #self.target_pos = np.array([0.51, 0.17, 0.0])
+                        #self.target_pos = np.array([0.51, 0.0, 0.0])
+                        #self.target_pos = np.array([0.51, -0.17, 0.0])
+                        #self.target_pos = np.array([0.51, -0.34, 0.0])
+                        #Række 3
+                        #self.target_pos = np.array([0.35, 0.34, 0.0])
+                        #self.target_pos = np.array([0.35, 0.17, 0.0])
+                        #self.target_pos = np.array([0.35, 0.0, 0.0])
+                        #self.target_pos = np.array([0.35, -0.17, 0.0])
+                        #self.target_pos = np.array([0.35, -0.34, 0.0])
+                        #Række 4
+                        #self.target_pos = np.array([0.24, 0.34, 0.0])
+                        #self.target_pos = np.array([0.24, 0.17, 0.0])
+                        #self.target_pos = np.array([0.24, -0.17, 0.0])
+                        #self.target_pos = np.array([0.24, -0.34, 0.0])
+                        #Række 5
+                        #self.target_pos = np.array([0.1, 0.34, 0.0])
+                        #self.target_pos = np.array([0.1, -0.34, 0.0])
 
 
-                        #test 1
-                        #self.target_pos = np.array([0.43, 0.09, 0.21])
-                        #self.target_pos = np.array([0.55, -0.2, 0.23])
-                        #self.target_pos = np.array([0.6, 0.07, 0.27])
-                        #self.target_pos = np.array([0.54, 0.2, 0.3])
-                        #self.target_pos = np.array([0.59, 0.05, 0.23])
-                        #self.target_pos = np.array([0.4,  -0.21, 0.3])
 
 
 
 
-                        #test 2
-                        #self.target_pos = np.array([0.59, -0.47, 0.3])
-                        #self.target_pos = np.array([0.14, 0.5, 0.3])
-                        #self.target_pos = np.array([0.46, 0.2, 0.3])
-                        #self.target_pos = np.array([0.12, -0.54, 0.3])
-                        #self.target_pos = np.array([0.43, 0.44, 0.3])
+                        #Within area
+                        #Række 1
+                        #self.target_pos = np.array([0.6, 0.25, 0.0])
+                        #self.target_pos = np.array([0.6, 0.08, 0.0])
+                        #self.target_pos = np.array([0.6, -0.08, 0.0])
+                        #self.target_pos = np.array([0.6, -0.25, 0.0])
+                        #Række 2
+                        #self.target_pos = np.array([0.53, 0.25, 0.0])
+                        #self.target_pos = np.array([0.53, 0.08, 0.0])
+                        #self.target_pos = np.array([0.53, -0.08, 0.0])
+                        #self.target_pos = np.array([0.53, -0.25, 0.0])
+                        #Række 3
+                        #self.target_pos = np.array([0.46, 0.25, 0.0])
+                        #self.target_pos = np.array([0.46, 0.08, 0.0])
+                        #self.target_pos = np.array([0.46, -0.08, 0.0])
+                        #self.target_pos = np.array([0.46, -0.25, 0.0])
+                        #Række 4
+                        #self.target_pos = np.array([0.4, 0.25, 0.0])
+                        #self.target_pos = np.array([0.4, 0.08, 0.0])
+                        #self.target_pos = np.array([0.4, -0.08, 0.0])
+                        #self.target_pos = np.array([0.4, -0.25, 0.0])
 
-                        #test 3
-                        #self.target_pos = np.array([-0.7047, -0.8319, -1.7732])
-                        #self.target_pos = np.array([0.7, -0.7, 0.06])
-                        #self.target_pos = np.array([-0.7, 0.7, 0.06])
-                        #self.target_pos = np.array([-0.7, -0.7, 0.06])
+                        #Tilfældige
                         
-                        #self.target_pos = np.array([-1, 1, 0])
-                        #self.target_pos = np.array([0.7, 0.7, 0.3])
-                        #self.target_pos = np.array([0.7, -0.7, 0.3])
-                        #self.target_pos = np.array([-0.7, 0.7, 0.3])
-                        #self.target_pos = np.array([-0.7, -0.7, 0.3])
-
-                        #self.target_pos = np.array([0.7, 0, 0.06])
-                        #self.target_pos = np.array([0, -0.7, 0.06])
-                        #self.target_pos = np.array([0, 0.7, 0.06])
-                        #self.target_pos = np.array([-0.7, 0, 0.06])
 
 
                     print("Target position:", self.target_pos)
@@ -289,12 +310,7 @@ class ReachingFranka(gym.Env):
                 robot_state = self.robot.get_state(read_once=False)
             # forward kinematics
             #dof_pos = action[0:7]
-            #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale) # fikser at der ikke er gripper med i øjeblikket... måske
-            #dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action * self.action_scale)
-
-            dof_pos = np.clip(action[0:7] * 0.5 * 2.5, self.robot_dof_lower_limits, self.robot_dof_upper_limits)
-
-
+            dof_pos = np.array(robot_state.q) + (self.robot_dof_speed_scales * self.dt * action[0:7] * self.action_scale) # fikser at der ikke er gripper med i øjeblikket... måske
             affine = frankx.Affine(self.robot.forward_kinematics(dof_pos.flatten().tolist()))
             affine = affine * frankx.Affine(x=0, y=0, z=-0.10335, a=np.pi/2)
             #print("går jeg herind")
@@ -321,21 +337,21 @@ class ReachingFranka(gym.Env):
 
         #Gripper action goes here
         #This code makes the gripper action executeble (maps from 20 :  to 0.08 : 0)
-        def translate_a_to_c(value, leftMin, leftMax, rightMin, rightMax):
+        #def translate_a_to_c(value, leftMin, leftMax, rightMin, rightMax):
             # Figure out how 'wide' each range is
-            leftSpan = leftMax - leftMin
-            rightSpan = rightMax - rightMin
-            if value >= leftMax:
-                value == leftMax
+            #leftSpan = leftMax - leftMin
+            #rightSpan = rightMax - rightMin
+            #if value >= leftMax:
+            #    value == leftMax
             # Convert the left range into a 0-1 range (float)
-            valueScaled = float(value - leftMin) / float(leftSpan)
+            #valueScaled = float(value - leftMin) / float(leftSpan)
 
             # Convert the 0-1 range into a value in the right range.
-            return rightMin + (valueScaled * rightSpan)
+            #return rightMin + (valueScaled * rightSpan)
         
-        gripper_width_target = (translate_a_to_c(action[7:8], -2, 2, 0.00, 0.08))
-        self.gripper.move_async(gripper_width_target)
-        print("Gripper width target is:", gripper_width_target)
+        #gripper_width_target = (translate_a_to_c(action[7:8], -2, 2, 0.00, 0.08))
+        #self.gripper.move_async(gripper_width_target)
+        #print("Gripper width target is:", gripper_width_target)
         #self.gripper.move_async(action[7:8])
 
         ###################
@@ -373,7 +389,7 @@ class ReachingFranka(gym.Env):
         #self.all_data.append(observation.copy() + self.last_action + self.reward)
         self.all_data.append(hodor)
         DATA = np.array(self.all_data)
-        np.savetxt(f"test.csv", np.array(DATA), delimiter=",")
+        np.savetxt(f"test2.csv", np.array(DATA), delimiter=",")
 
 
         if self._drepecated_api:
