@@ -9,7 +9,8 @@
 from ultralytics import YOLO, checks, hub
 checks()
 
-hub.login('bb45ab1ce9f6990415bb1868e761b3bea39b8c0b01')
+hub.login('cec9a2ca8516f54e0441992802972efc4950a2b3bb')
 
-model = YOLO('https://hub.ultralytics.com/models/ogWRIrcFlewDC3HOCDf4')
-results = model.train(device='mps')
+model = YOLO('https://hub.ultralytics.com/models/mTvD3VLZSTGEuweBOO3f')
+results = model.train()
+
