@@ -14,3 +14,4 @@ hub.login('cec9a2ca8516f54e0441992802972efc4950a2b3bb')
 model = YOLO('https://hub.ultralytics.com/models/mTvD3VLZSTGEuweBOO3f')
 results = model.train()
 
+
