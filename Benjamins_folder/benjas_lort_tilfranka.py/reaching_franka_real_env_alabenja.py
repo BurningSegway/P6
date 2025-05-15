@@ -319,7 +319,7 @@ class ReachingFranka(gym.Env):
         self.all_data.append(observation.copy())
         self.DATA = np.array(self.all_data)
         print(self.DATA.shape)
-        np.savetxt(f"DATA_alabenja_01_-01_002.csv", np.array(self.DATA), delimiter=",")
+        np.savetxt(f"test2.csv", np.array(self.DATA), delimiter=",")
 
 
 
