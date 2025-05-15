@@ -71,8 +71,9 @@ def plot_simple():
     )
 
 
-    colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'w']
-    df = pd.read_csv("test.csv", header=None, names=column_names)
+    colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'b']
+    #df = pd.read_csv("test.csv", header=None, names=column_names)
+    df = pd.read_csv("P6/test.csv", header=None, names=column_names)
     
     # Set up the plot figure
     fig, ax1 = plt.subplots(figsize=(12, 8))
@@ -118,7 +119,7 @@ def plot_simple():
         ax2.plot(df[f'joint_vel_{i}'], label=f'Joint {i} velocity', color=colors[i], linewidth=2)
     
     # Plot actions and distance on the left y-axis (ax1)
-    for i in range(4,7):
+    for i in range(4,8):
         ax1.plot(df[f'action_{i}'], label=f'action {i}', color=colors[i], linestyle='--', linewidth=2)
     ax1.plot(df[f'distance'], label=f'distance', linewidth=2, linestyle=':', color='blue')
 
@@ -142,3 +143,62 @@ def plot_simple():
 #plot_ala()
 #plot_basic()
 plot_simple()
+"""
+
+#Range
+#Række 1
+self.target_pos = np.array([0.65, 0.34, 0.0])
+self.target_pos = np.array([0.65, 0.17, 0.0])
+self.target_pos = np.array([0.65, 0.0, 0.0])
+self.target_pos = np.array([0.65, -0.17, 0.0])
+self.target_pos = np.array([0.65, -0.34, 0.0])
+#Række 2
+self.target_pos = np.array([0.51, 0.34, 0.0])
+self.target_pos = np.array([0.51, 0.17, 0.0])
+self.target_pos = np.array([0.51, 0.0, 0.0])
+self.target_pos = np.array([0.51, -0.17, 0.0])
+self.target_pos = np.array([0.51, -0.34, 0.0])
+#Række 3
+self.target_pos = np.array([0.35, 0.34, 0.0])
+self.target_pos = np.array([0.35, 0.17, 0.0])
+self.target_pos = np.array([0.35, 0.0, 0.0])
+self.target_pos = np.array([0.35, -0.17, 0.0])
+self.target_pos = np.array([0.35, -0.34, 0.0])
+#Række 4
+self.target_pos = np.array([0.24, 0.34, 0.0])
+self.target_pos = np.array([0.24, 0.17, 0.0])
+self.target_pos = np.array([0.24, -0.17, 0.0])
+self.target_pos = np.array([0.24, -0.34, 0.0])
+#Række 5
+self.target_pos = np.array([0.1, 0.34, 0.0])
+self.target_pos = np.array([0.1, -0.34, 0.0])
+
+
+
+
+
+
+#Within area
+#Række 1
+self.target_pos = np.array([0.6, 0.25, 0.0])
+self.target_pos = np.array([0.6, 0.08, 0.0])
+self.target_pos = np.array([0.6, -0.08, 0.0])
+self.target_pos = np.array([0.6, -0.25, 0.0])
+#Række 2
+self.target_pos = np.array([0.53, 0.25, 0.0])
+self.target_pos = np.array([0.53, 0.08, 0.0])
+self.target_pos = np.array([0.53, -0.08, 0.0])
+self.target_pos = np.array([0.53, -0.25, 0.0])
+#Række 3
+self.target_pos = np.array([0.46, 0.25, 0.0])
+self.target_pos = np.array([0.46, 0.08, 0.0])
+self.target_pos = np.array([0.46, -0.08, 0.0])
+self.target_pos = np.array([0.46, -0.25, 0.0])
+#Række 4
+self.target_pos = np.array([0.4, 0.25, 0.0])
+self.target_pos = np.array([0.4, 0.08, 0.0])
+self.target_pos = np.array([0.4, -0.08, 0.0])
+self.target_pos = np.array([0.4, -0.25, 0.0])
+
+#Tilfældige
+"""
