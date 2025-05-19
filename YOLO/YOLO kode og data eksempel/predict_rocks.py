@@ -5,7 +5,7 @@ from ultralytics import YOLO
 # Assuming your model file is in the current working directory, or provide the full path
 tic()
 print('### Loading checkpoint... ###')
-model_path = 'model_- 21 march 2024 16_19.pt'
+model_path = 'YOLO/YOLO kode og data eksempel/model_- 21 march 2024 16_19.pt'
 print(toc())
 
 # Load your custom model
@@ -18,19 +18,15 @@ print(toc())
 # For a local file, just replace the URL with the path to your image file, like 'path/to/your/image.jpg'
 tic()
 print('### Predicting... ###')
-results = model(['Image_1.jpg',
-                 'Image_2.jpg',
-                 'Image_3.jpg',
-                 'Image_4.jpg',
-                 'Image_5.jpg',
-                 'Image_6.jpg',
-                 'Image_7.jpg',
-                 'Image_8.jpg',
-                 'Image_9.jpg',
-                 'Image_10.jpg',
-                 'Image_11.jpg',
-                 'Image_12.jpg',
-                 ], conf=0.85)  # Predict on an example image
+results = model(['YOLO/YOLO kode og data eksempel/Image_1.jpg',
+                 'YOLO/YOLO kode og data eksempel/Image_2.jpg',
+                 'YOLO/YOLO kode og data eksempel/Image_3.jpg',
+                 'YOLO/YOLO kode og data eksempel/Image_4.jpg',
+                 'YOLO/YOLO kode og data eksempel/Image_5.jpg',
+                 'YOLO/YOLO kode og data eksempel/Image_6.jpg',
+                 'YOLO/YOLO kode og data eksempel/Image_7.jpg',
+                 'YOLO/YOLO kode og data eksempel/Image_8.jpg',
+                 ], conf=0.70)  # Predict on an example image
 print(toc())
 
 # tic()
