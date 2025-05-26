@@ -65,8 +65,8 @@ class ReachingFranka(gym.Env):
         self.dof_vel_scale = 0.1
         self.max_episode_length = 200
         self.robot_dof_speed_scales = 1 #This controlls the speed do not put above 0.5
-        #self.robot_default_dof_pos = np.array([0, -0.569, 0, -2.810, 0, 3.037, 0.741])
-        self.robot_default_dof_pos = np.radians([0, -45, 0, -135, 0, 90, 45])
+        self.robot_default_dof_pos = np.array([-0.217, 0.698, 0.050, 0.239, 0.435, 0.767, -1.175])
+        #self.robot_default_dof_pos = np.radians([0, -45, 0, -135, 0, 90, 45])
         self.robot_dof_lower_limits = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
         self.robot_dof_upper_limits = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
         self.progress_buf = 1
